@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 2910407192402419080}
   - component: {fileID: 1596320694335462346}
   - component: {fileID: 833762972175244518}
-  - component: {fileID: 6576356931002847072}
   - component: {fileID: 8402407796490064570}
+  - component: {fileID: 3687690733065718807}
   m_Layer: 6
   m_Name: EnemyBody
   m_TagString: Untagged
@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -8712960805270391172, guid: 023ec87ad330d6243875977915baedbf, type: 3}
+  m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -92,7 +92,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
 --- !u!114 &833762972175244518
 MonoBehaviour:
@@ -114,42 +114,6 @@ MonoBehaviour:
   useRage: 0
   rageTriggerProgress: 0.65
   rageSpeedMultiplier: 1.5
---- !u!58 &6576356931002847072
-CircleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4987349912358381776}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
 --- !u!114 &8402407796490064570
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -163,3 +127,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.SnakeEnemySegment
   maxHp: 30
+  hitTint: {r: 1, g: 0.35, b: 0.35, a: 1}
+  hitFlashDuration: 0.1
+--- !u!114 &3687690733065718807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4987349912358381776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b8e0aa581fa2c54dace9d3786fbcb5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.SnakeBodyVisualChain
+  discCount: 4
+  discSpacingAlongPath: 0.22
+  discPrefab: {fileID: 7012086066412840675, guid: f42798d20b066e64d82888407ab2c36d, type: 3}

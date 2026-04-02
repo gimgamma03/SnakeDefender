@@ -36,9 +36,11 @@ namespace SnakeDefender
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            SnakeEnemySegment segment = other.GetComponent<SnakeEnemySegment>();
+            Debug.Log($"[Projectile Trigger] {name} touched {other.name}");
+            SnakeEnemySegment segment = other.GetComponentInParent<SnakeEnemySegment>();
             if (segment == null)
             {
+                Debug.Log($"[Projectile Trigger] No SnakeEnemySegment on {other.name} parent chain.");
                 return;
             }
 
@@ -47,6 +49,7 @@ namespace SnakeDefender
                 return;
             }
 
+            Debug.Log($"[Projectile Hit] {name} -> {other.name}, damage: {damage}");
             segment.TakeDamage(damage);
             Destroy(gameObject);
         }

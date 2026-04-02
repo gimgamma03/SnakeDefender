@@ -8,14 +8,14 @@ namespace SnakeDefender
         [SerializeField] private SnakeEnemy enemyPrefab;
         [SerializeField] private PathRoute route;
         [SerializeField] private GameFlowController gameFlow;
-        [SerializeField] private int spawnCount = 10;
-        [SerializeField] private float spawnInterval = 1f;
+        [Tooltip("One wave = one snake (one head). Body part count is set on the SnakeEnemy prefab.")]
+        [SerializeField] private float delayBeforeSpawn;
 
         private void Start()
         {
             if (gameFlow != null)
             {
-                gameFlow.SetTotalEnemyCount(spawnCount);
+                gameFlow.SetTotalEnemyCount(1);
             }
 
             StartCoroutine(SpawnRoutine());
@@ -28,12 +28,13 @@ namespace SnakeDefender
                 yield break;
             }
 
-            for (int i = 0; i < spawnCount; i++)
+            if (delayBeforeSpawn > 0f)
             {
-                SnakeEnemy enemy = Instantiate(enemyPrefab, route.GetWaypointPosition(0), Quaternion.identity);
-                enemy.Initialize(route, gameFlow);
-                yield return new WaitForSeconds(spawnInterval);
+                yield return new WaitForSeconds(delayBeforeSpawn);
             }
+
+            SnakeEnemy enemy = Instantiate(enemyPrefab, route.GetWaypointPosition(0), Quaternion.identity);
+            enemy.Initialize(route, gameFlow);
         }
     }
 }

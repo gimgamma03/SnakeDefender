@@ -37,6 +37,8 @@ namespace SnakeDefender
 
         private void SpawnProjectile()
         {
+            Debug.Log("SpawnProjectile called");
+
             if (projectilePrefab == null)
             {
                 return;
@@ -57,7 +59,7 @@ namespace SnakeDefender
 
             for (int i = 0; i < hits.Length; i++)
             {
-                SnakeEnemySegment segment = hits[i].collider.GetComponent<SnakeEnemySegment>();
+                SnakeEnemySegment segment = hits[i].collider.GetComponentInParent<SnakeEnemySegment>();
                 if (segment == null || !segment.CanBeDamaged)
                 {
                     continue;

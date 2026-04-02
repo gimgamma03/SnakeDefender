@@ -12,12 +12,13 @@ namespace SnakeDefender
         [Header("Shape")]
         [SerializeField] private SnakeEnemySegment headPrefab;
         [SerializeField] private SnakeEnemySegment bodyPrefab;
+        [Tooltip("Gameplay body parts behind the head. Each part can use one prefab with many child sprites for visuals.")]
         [SerializeField] private int bodyCount = 10;
         [SerializeField] private float segmentSpacing = 0.45f;
 
         [Header("Stats")]
         [SerializeField] private float headHp = 40f;
-        [SerializeField] private float bodyHp = 20f;
+        [SerializeField] private float bodyHp = 60f;
         [SerializeField] private int killScore = 1;
 
         private readonly List<SnakeEnemySegment> segments = new List<SnakeEnemySegment>();
@@ -109,6 +110,8 @@ namespace SnakeDefender
             {
                 SnakeEnemySegment body = Instantiate(bodyPrefab, transform);
                 body.Initialize(this, bodyHp);
+                // First body should follow the head immediately from start.
+                body.gameObject.SetActive(i == 0);
                 segments.Add(body);
             }
         }
@@ -120,6 +123,9 @@ namespace SnakeDefender
                 return;
             }
 
+            float tangentSample = Mathf.Max(0.02f, segmentSpacing * 0.25f);
+            float pathLen = route.TotalLength;
+
             for (int i = 0; i < segments.Count; i++)
             {
                 SnakeEnemySegment segment = segments[i];
@@ -128,21 +134,55 @@ namespace SnakeDefender
                     continue;
                 }
 
+                bool shouldBeActive = i <= 1 || headDistance >= segmentSpacing * i;
+                if (segment.gameObject.activeSelf != shouldBeActive)
+                {
+                    segment.gameObject.SetActive(shouldBeActive);
+                }
+
+                if (!shouldBeActive)
+                {
+                    continue;
+                }
+
                 float dist = Mathf.Max(0f, headDistance - (segmentSpacing * i));
                 Vector3 newPos = route.GetPointAtDistance(dist);
                 segment.transform.position = newPos;
 
-                if (i > 0)
+                Vector2 tangent = GetPathTangentForward(route, dist, pathLen, tangentSample);
+                if (tangent.sqrMagnitude > 0.0001f)
                 {
-                    Vector3 ahead = route.GetPointAtDistance(Mathf.Max(0f, dist - segmentSpacing));
-                    Vector2 dir = (ahead - newPos);
-                    if (dir.sqrMagnitude > 0.0001f)
-                    {
-                        float z = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-                        segment.transform.rotation = Quaternion.Euler(0f, 0f, z);
-                    }
+                    float z = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg;
+                    segment.transform.rotation = Quaternion.Euler(0f, 0f, z);
+                }
+
+                SnakeBodyVisualChain visualChain = segment.GetComponent<SnakeBodyVisualChain>();
+                if (visualChain != null)
+                {
+                    visualChain.Refresh(route, dist);
                 }
             }
+        }
+
+        private static Vector2 GetPathTangentForward(PathRoute pathRoute, float distanceAlongPath, float pathLength, float sampleDelta)
+        {
+            if (pathRoute == null || pathLength <= Mathf.Epsilon)
+            {
+                return Vector2.right;
+            }
+
+            float d0 = Mathf.Clamp(distanceAlongPath - sampleDelta, 0f, pathLength);
+            float d1 = Mathf.Clamp(distanceAlongPath + sampleDelta, 0f, pathLength);
+            if (Mathf.Approximately(d0, d1))
+            {
+                d0 = Mathf.Max(0f, distanceAlongPath - sampleDelta * 2f);
+                d1 = Mathf.Min(pathLength, distanceAlongPath + sampleDelta * 2f);
+            }
+
+            Vector3 p0 = pathRoute.GetPointAtDistance(d0);
+            Vector3 p1 = pathRoute.GetPointAtDistance(d1);
+            Vector2 tangent = (Vector2)(p1 - p0);
+            return tangent.sqrMagnitude > 0.0001f ? tangent.normalized : Vector2.right;
         }
     }
 }

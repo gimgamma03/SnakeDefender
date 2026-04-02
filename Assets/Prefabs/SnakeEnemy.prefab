@@ -45,11 +45,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.SnakeEnemy
   route: {fileID: 0}
-  moveSpeed: 1.5
+  moveSpeed: 1
   headPrefab: {fileID: 232956604805470759, guid: 8022c6c57343eb247953199099a8eb05, type: 3}
   bodyPrefab: {fileID: 8402407796490064570, guid: 5ddf521498373864fb8d1f549937ad3b, type: 3}
   bodyCount: 10
-  segmentSpacing: 0.45
+  segmentSpacing: 0.8
   headHp: 40
-  bodyHp: 20
+  bodyHp: 200
   killScore: 1
