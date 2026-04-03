@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,34 +6,105 @@ namespace SnakeDefender
 {
     public class SnakeEnemy : MonoBehaviour
     {
-        [Header("Route")]
+        [Header("Optional Runtime Overrides")]
+        [Tooltip("Usually injected by spawner on Initialize().")]
         [SerializeField] private PathRoute route;
         [SerializeField] private float moveSpeed = 1.5f;
+        [Tooltip("Player transform. If empty, defeat-on-contact check is skipped.")]
+        [SerializeField] private Transform finalGoalTarget;
 
-        [Header("Shape")]
+        [Header("Tuning")]
+        [SerializeField] private float playerContactRadius = 0.2f;
+        [SerializeField] private float playerContactDefeatDelay = 0.3f;
+
+        [Header("Required Prefabs")]
         [SerializeField] private SnakeEnemySegment headPrefab;
         [SerializeField] private SnakeEnemySegment bodyPrefab;
+
+        [Header("Shape")]
         [Tooltip("Gameplay body parts behind the head. Each part can use one prefab with many child sprites for visuals.")]
         [SerializeField] private int bodyCount = 10;
         [SerializeField] private float segmentSpacing = 0.45f;
+        [SerializeField] private float firstBodySpacingMultiplier = 0.8f;
+        [SerializeField] private int segmentSortingStride = 100;
 
         [Header("Stats")]
         [SerializeField] private float headHp = 40f;
         [SerializeField] private float bodyHp = 60f;
+        [Tooltip("몸통을 앞에서부터 이 개수마다 한 티어로 나누고, 뒤 티어마다 아래 비율만큼 최대 HP가 증가합니다.")]
+        [SerializeField] private int bodyHpTierSegmentCount = 3;
+        [Tooltip("티어가 1 올라갈 때마다 기준 bodyHp에 곱해 더하는 비율 (0.1 = +10%씩).")]
+        [SerializeField] private float bodyHpBonusPerTier = 0.1f;
         [SerializeField] private int killScore = 1;
 
+        [Header("Head Phase / Rage")]
+        [SerializeField] private Sprite phase1HeadSprite;
+        [SerializeField] private Sprite phase2HeadSprite;
+        [SerializeField] private int head1RageTriggerDestroyedBodies = 3;
+        [SerializeField] private int phase2TriggerDestroyedBodies = 6;
+        [SerializeField] private int head2RageTriggerDestroyedBodies = 9;
+        [SerializeField] private float rageDuration = 2f;
+        [SerializeField] private float rageSpeedMultiplier = 1.5f;
+        [SerializeField] private Color rageTintColor = new Color(1f, 0.55f, 0.55f, 1f);
+
         private readonly List<SnakeEnemySegment> segments = new List<SnakeEnemySegment>();
-        private GameFlowController gameFlow;
+        private readonly List<SegmentCache> segmentCaches = new List<SegmentCache>();
+        private GameManager gameFlow;
         private float headDistance;
         private bool dead;
+        private float routeLength;
+        private float finalLegLength;
+        private float baseMoveSpeed;
+        private int destroyedBodyCount;
 
-        public void Initialize(PathRoute pathRoute, GameFlowController flow)
+        private bool isPhase2;
+        private bool isRaging;
+        private bool hasTriggeredHead1Rage;
+        private bool hasTriggeredHead2Rage;
+        private bool pendingPhase2Transition;
+
+        private SnakeEnemySegment headSegment;
+        private SpriteRenderer headRenderer;
+        private Color headBaseColor = Color.white;
+        private Coroutine rageRoutine;
+        private float playerContactElapsed;
+
+        private class SegmentCache
+        {
+            public SnakeEnemySegment Segment;
+            public SpriteRenderer RootRenderer;
+            public SnakeBodyVisualChain VisualChain;
+        }
+
+        public int BodyCount => Mathf.Max(0, bodyCount);
+
+        public void Initialize(PathRoute pathRoute, GameManager flow, Transform goalTarget = null, int bodyCountOverride = -1)
         {
             route = pathRoute;
             gameFlow = flow;
+            if (bodyCountOverride >= 0)
+            {
+                bodyCount = bodyCountOverride;
+            }
+            if (goalTarget != null)
+            {
+                finalGoalTarget = goalTarget;
+            }
             headDistance = 0f;
             dead = false;
+            routeLength = route == null ? 0f : route.TotalLength;
+            finalLegLength = CalculateFinalLegLength();
+            baseMoveSpeed = moveSpeed;
+            destroyedBodyCount = 0;
+            isPhase2 = false;
+            isRaging = false;
+            hasTriggeredHead1Rage = false;
+            hasTriggeredHead2Rage = false;
+            pendingPhase2Transition = false;
             BuildSegments();
+            CacheHeadRenderer();
+            ApplyHeadSpriteForCurrentPhase();
+            SetHeadTint(headBaseColor);
             RefreshSegmentPositions();
         }
 
@@ -46,10 +118,26 @@ namespace SnakeDefender
             headDistance += moveSpeed * Time.deltaTime;
             RefreshSegmentPositions();
 
-            if (headDistance >= route.TotalLength)
+            if (HasHeadTouchedPlayer())
+            {
+                playerContactElapsed += Time.deltaTime;
+                if (playerContactElapsed >= Mathf.Clamp(playerContactDefeatDelay, 0.01f, 5f))
+                {
+                    dead = true;
+                    gameFlow?.NotifyPlayerDefeated();
+                    Destroy(gameObject);
+                    return;
+                }
+            }
+            else
+            {
+                playerContactElapsed = 0f;
+            }
+
+            if (headDistance >= GetTotalTrackLength())
             {
                 dead = true;
-                gameFlow?.NotifyEnemyReachedGoal();
+                gameFlow?.NotifyPlayerDefeated();
                 Destroy(gameObject);
             }
         }
@@ -73,7 +161,15 @@ namespace SnakeDefender
             }
 
             segments.RemoveAt(index);
+            if (index < segmentCaches.Count)
+            {
+                segmentCaches.RemoveAt(index);
+            }
             Destroy(destroyedSegment.gameObject);
+            destroyedBodyCount++;
+            gameFlow?.NotifyEnemyKilled(1);
+            PlayerUpgradeScheduler.Instance?.RegisterBodySegmentDestroyed();
+            EvaluateHeadStateByDestroyedBodies();
 
             // Pull head/front body one slot backward after a body break.
             headDistance = Mathf.Max(0f, headDistance - segmentSpacing);
@@ -83,7 +179,6 @@ namespace SnakeDefender
             if (segments.Count <= 1)
             {
                 dead = true;
-                gameFlow?.NotifyEnemyKilled(killScore);
                 Destroy(gameObject);
             }
         }
@@ -96,6 +191,7 @@ namespace SnakeDefender
             }
 
             segments.Clear();
+            segmentCaches.Clear();
 
             if (headPrefab == null || bodyPrefab == null)
             {
@@ -104,15 +200,40 @@ namespace SnakeDefender
 
             SnakeEnemySegment head = Instantiate(headPrefab, transform);
             head.Initialize(this, headHp, false);
-            segments.Add(head);
+            AddSegment(head);
+            headSegment = head;
 
+            int tierSize = Mathf.Max(1, bodyHpTierSegmentCount);
+            float bonus = Mathf.Max(0f, bodyHpBonusPerTier);
             for (int i = 0; i < bodyCount; i++)
             {
                 SnakeEnemySegment body = Instantiate(bodyPrefab, transform);
-                body.Initialize(this, bodyHp);
+                int tier = i / tierSize;
+                float scaledHp = bodyHp * (1f + bonus * tier);
+                body.Initialize(this, scaledHp);
                 // First body should follow the head immediately from start.
                 body.gameObject.SetActive(i == 0);
-                segments.Add(body);
+                AddSegment(body);
+            }
+
+            StartCoroutine(RegisterDamageableSegmentsWithUiNextFrame());
+        }
+
+        private IEnumerator RegisterDamageableSegmentsWithUiNextFrame()
+        {
+            yield return null;
+
+            if (dead || WorldSegmentUIManager.Instance == null)
+            {
+                yield break;
+            }
+
+            foreach (SnakeEnemySegment seg in segments)
+            {
+                if (seg != null && seg.CanBeDamaged)
+                {
+                    WorldSegmentUIManager.Instance.Register(seg);
+                }
             }
         }
 
@@ -123,9 +244,6 @@ namespace SnakeDefender
                 return;
             }
 
-            float tangentSample = Mathf.Max(0.02f, segmentSpacing * 0.25f);
-            float pathLen = route.TotalLength;
-
             for (int i = 0; i < segments.Count; i++)
             {
                 SnakeEnemySegment segment = segments[i];
@@ -134,7 +252,8 @@ namespace SnakeDefender
                     continue;
                 }
 
-                bool shouldBeActive = i <= 1 || headDistance >= segmentSpacing * i;
+                float activationDistance = GetDistanceBehindHead(i);
+                bool shouldBeActive = i <= 1 || headDistance >= activationDistance;
                 if (segment.gameObject.activeSelf != shouldBeActive)
                 {
                     segment.gameObject.SetActive(shouldBeActive);
@@ -145,44 +264,203 @@ namespace SnakeDefender
                     continue;
                 }
 
-                float dist = Mathf.Max(0f, headDistance - (segmentSpacing * i));
-                Vector3 newPos = route.GetPointAtDistance(dist);
+                float dist = Mathf.Max(0f, headDistance - GetDistanceBehindHead(i));
+                Vector3 newPos = GetTrackPoint(dist);
                 segment.transform.position = newPos;
+                segment.transform.rotation = Quaternion.identity;
 
-                Vector2 tangent = GetPathTangentForward(route, dist, pathLen, tangentSample);
-                if (tangent.sqrMagnitude > 0.0001f)
+                int segmentBaseSortingOrder = -i * Mathf.Max(1, segmentSortingStride);
+                SegmentCache cache = i < segmentCaches.Count ? segmentCaches[i] : null;
+                SpriteRenderer rootRenderer = cache != null ? cache.RootRenderer : null;
+                if (rootRenderer != null)
                 {
-                    float z = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg;
-                    segment.transform.rotation = Quaternion.Euler(0f, 0f, z);
+                    rootRenderer.sortingOrder = segmentBaseSortingOrder;
                 }
 
-                SnakeBodyVisualChain visualChain = segment.GetComponent<SnakeBodyVisualChain>();
+                SnakeBodyVisualChain visualChain = cache != null ? cache.VisualChain : null;
                 if (visualChain != null)
                 {
-                    visualChain.Refresh(route, dist);
+                    visualChain.Refresh(route, dist, finalGoalTarget, routeLength, segmentBaseSortingOrder);
                 }
             }
         }
 
-        private static Vector2 GetPathTangentForward(PathRoute pathRoute, float distanceAlongPath, float pathLength, float sampleDelta)
+        private void AddSegment(SnakeEnemySegment segment)
         {
-            if (pathRoute == null || pathLength <= Mathf.Epsilon)
+            segments.Add(segment);
+            segmentCaches.Add(new SegmentCache
             {
-                return Vector2.right;
-            }
-
-            float d0 = Mathf.Clamp(distanceAlongPath - sampleDelta, 0f, pathLength);
-            float d1 = Mathf.Clamp(distanceAlongPath + sampleDelta, 0f, pathLength);
-            if (Mathf.Approximately(d0, d1))
-            {
-                d0 = Mathf.Max(0f, distanceAlongPath - sampleDelta * 2f);
-                d1 = Mathf.Min(pathLength, distanceAlongPath + sampleDelta * 2f);
-            }
-
-            Vector3 p0 = pathRoute.GetPointAtDistance(d0);
-            Vector3 p1 = pathRoute.GetPointAtDistance(d1);
-            Vector2 tangent = (Vector2)(p1 - p0);
-            return tangent.sqrMagnitude > 0.0001f ? tangent.normalized : Vector2.right;
+                Segment = segment,
+                RootRenderer = segment != null ? segment.GetComponent<SpriteRenderer>() : null,
+                VisualChain = segment != null ? segment.GetComponent<SnakeBodyVisualChain>() : null
+            });
         }
+
+        private float CalculateFinalLegLength()
+        {
+            if (route == null || finalGoalTarget == null || route.WaypointCount <= 0)
+            {
+                return 0f;
+            }
+
+            Vector3 lastPoint = route.GetWaypointPosition(route.WaypointCount - 1);
+            return Vector3.Distance(lastPoint, finalGoalTarget.position);
+        }
+
+        private float GetTotalTrackLength()
+        {
+            return routeLength + finalLegLength;
+        }
+
+        private Vector3 GetTrackPoint(float distance)
+        {
+            if (route == null)
+            {
+                return transform.position;
+            }
+
+            if (distance <= routeLength || finalGoalTarget == null || finalLegLength <= Mathf.Epsilon || route.WaypointCount <= 0)
+            {
+                return route.GetPointAtDistance(distance);
+            }
+
+            Vector3 lastPoint = route.GetWaypointPosition(route.WaypointCount - 1);
+            float extra = Mathf.Clamp(distance - routeLength, 0f, finalLegLength);
+            float t = extra / finalLegLength;
+            return Vector3.Lerp(lastPoint, finalGoalTarget.position, t);
+        }
+
+        private float GetDistanceBehindHead(int segmentIndex)
+        {
+            if (segmentIndex <= 0)
+            {
+                return 0f;
+            }
+
+            float firstGap = segmentSpacing * Mathf.Clamp(firstBodySpacingMultiplier, 0.1f, 1f);
+            if (segmentIndex == 1)
+            {
+                return firstGap;
+            }
+
+            return firstGap + (segmentIndex - 1) * segmentSpacing;
+        }
+
+        private bool HasHeadTouchedPlayer()
+        {
+            if (finalGoalTarget == null || headSegment == null)
+            {
+                return false;
+            }
+
+            float sqrDist = (headSegment.transform.position - finalGoalTarget.position).sqrMagnitude;
+            float radius = Mathf.Max(0.01f, playerContactRadius);
+            return sqrDist <= radius * radius;
+        }
+
+        private void EvaluateHeadStateByDestroyedBodies()
+        {
+            if (!hasTriggeredHead1Rage && destroyedBodyCount >= head1RageTriggerDestroyedBodies)
+            {
+                hasTriggeredHead1Rage = true;
+                StartRage(isForPhase2: false);
+                return;
+            }
+
+            if (!isPhase2 && destroyedBodyCount >= phase2TriggerDestroyedBodies)
+            {
+                if (isRaging)
+                {
+                    pendingPhase2Transition = true;
+                }
+                else
+                {
+                    EnterPhase2();
+                }
+
+                return;
+            }
+
+            if (isPhase2 && !hasTriggeredHead2Rage && destroyedBodyCount >= head2RageTriggerDestroyedBodies)
+            {
+                hasTriggeredHead2Rage = true;
+                StartRage(isForPhase2: true);
+            }
+        }
+
+        private void EnterPhase2()
+        {
+            isPhase2 = true;
+            ApplyHeadSpriteForCurrentPhase();
+            SetHeadTint(headBaseColor);
+        }
+
+        private void StartRage(bool isForPhase2)
+        {
+            if (rageRoutine != null)
+            {
+                StopCoroutine(rageRoutine);
+            }
+
+            rageRoutine = StartCoroutine(RageRoutine(isForPhase2));
+        }
+
+        private IEnumerator RageRoutine(bool isForPhase2)
+        {
+            isRaging = true;
+            moveSpeed = baseMoveSpeed * rageSpeedMultiplier;
+            SetHeadTint(rageTintColor);
+
+            yield return new WaitForSeconds(rageDuration);
+
+            isRaging = false;
+            moveSpeed = baseMoveSpeed;
+            SetHeadTint(headBaseColor);
+
+            if (!isForPhase2 && !isPhase2 && (pendingPhase2Transition || destroyedBodyCount >= phase2TriggerDestroyedBodies))
+            {
+                pendingPhase2Transition = false;
+                EnterPhase2();
+            }
+
+            rageRoutine = null;
+        }
+
+        private void CacheHeadRenderer()
+        {
+            if (headSegment == null)
+            {
+                return;
+            }
+
+            headRenderer = headSegment.GetComponentInChildren<SpriteRenderer>(true);
+            if (headRenderer != null)
+            {
+                headBaseColor = headRenderer.color;
+            }
+        }
+
+        private void ApplyHeadSpriteForCurrentPhase()
+        {
+            if (headRenderer == null)
+            {
+                return;
+            }
+
+            Sprite nextSprite = isPhase2 ? phase2HeadSprite : phase1HeadSprite;
+            if (nextSprite != null)
+            {
+                headRenderer.sprite = nextSprite;
+            }
+        }
+
+        private void SetHeadTint(Color color)
+        {
+            if (headRenderer != null)
+            {
+                headRenderer.color = color;
+            }
+        }
+
     }
 }

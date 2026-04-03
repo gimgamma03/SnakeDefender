@@ -11,11 +11,13 @@ namespace SnakeDefender
         [SerializeField] private int discCount = 4;
         [SerializeField] private float discSpacingAlongPath = 0.12f;
         [SerializeField] private GameObject discPrefab;
+        [SerializeField] private int discOrderStep = -1;
+        [SerializeField] private bool autoAssignDiscSortingOrder = true;
 
         private Transform[] discs;
         private bool built;
 
-        public void Refresh(PathRoute pathRoute, float anchorDistanceAlongPath)
+        public void Refresh(PathRoute pathRoute, float anchorDistanceAlongPath, Transform finalGoalTarget = null, float routeLength = 0f, int segmentBaseSortingOrder = 0)
         {
             if (pathRoute == null || discPrefab == null || discCount <= 0)
             {
@@ -24,8 +26,8 @@ namespace SnakeDefender
 
             EnsureDiscs(pathRoute);
 
-            float pathLen = pathRoute.TotalLength;
-            float sample = Mathf.Max(0.02f, discSpacingAlongPath * 0.25f);
+            float pathLen = routeLength > 0f ? routeLength : pathRoute.TotalLength;
+            float finalLegLength = CalculateFinalLegLength(pathRoute, finalGoalTarget);
 
             for (int k = 0; k < discs.Length; k++)
             {
@@ -35,14 +37,11 @@ namespace SnakeDefender
                 }
 
                 float d = Mathf.Max(0f, anchorDistanceAlongPath - (discSpacingAlongPath * k));
-                Vector3 pos = pathRoute.GetPointAtDistance(d);
+                Vector3 pos = GetTrackPoint(pathRoute, d, pathLen, finalGoalTarget, finalLegLength);
                 discs[k].SetPositionAndRotation(pos, Quaternion.identity);
-
-                Vector2 tan = TangentForward(pathRoute, d, pathLen, sample);
-                if (tan.sqrMagnitude > 0.0001f)
+                if (autoAssignDiscSortingOrder)
                 {
-                    float z = Mathf.Atan2(tan.y, tan.x) * Mathf.Rad2Deg;
-                    discs[k].rotation = Quaternion.Euler(0f, 0f, z);
+                    ApplyDiscSortingOrder(discs[k].gameObject, k, segmentBaseSortingOrder);
                 }
             }
         }
@@ -83,25 +82,44 @@ namespace SnakeDefender
             built = true;
         }
 
-        private static Vector2 TangentForward(PathRoute pathRoute, float distanceAlongPath, float pathLength, float sampleDelta)
+        private void ApplyDiscSortingOrder(GameObject discObject, int discIndex, int segmentBaseSortingOrder)
         {
-            if (pathRoute == null || pathLength <= Mathf.Epsilon)
+            SpriteRenderer[] renderers = discObject.GetComponentsInChildren<SpriteRenderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
             {
-                return Vector2.right;
+                // Keep all visuals of one disc at same order.
+                renderers[i].sortingOrder = segmentBaseSortingOrder + (discIndex * discOrderStep);
             }
-
-            float d0 = Mathf.Clamp(distanceAlongPath - sampleDelta, 0f, pathLength);
-            float d1 = Mathf.Clamp(distanceAlongPath + sampleDelta, 0f, pathLength);
-            if (Mathf.Approximately(d0, d1))
-            {
-                d0 = Mathf.Max(0f, distanceAlongPath - sampleDelta * 2f);
-                d1 = Mathf.Min(pathLength, distanceAlongPath + sampleDelta * 2f);
-            }
-
-            Vector3 p0 = pathRoute.GetPointAtDistance(d0);
-            Vector3 p1 = pathRoute.GetPointAtDistance(d1);
-            Vector2 t = (Vector2)(p1 - p0);
-            return t.sqrMagnitude > 0.0001f ? t.normalized : Vector2.right;
         }
+
+        private static float CalculateFinalLegLength(PathRoute pathRoute, Transform finalGoalTarget)
+        {
+            if (pathRoute == null || finalGoalTarget == null || pathRoute.WaypointCount <= 0)
+            {
+                return 0f;
+            }
+
+            Vector3 lastPoint = pathRoute.GetWaypointPosition(pathRoute.WaypointCount - 1);
+            return Vector3.Distance(lastPoint, finalGoalTarget.position);
+        }
+
+        private static Vector3 GetTrackPoint(PathRoute pathRoute, float distance, float routeLength, Transform finalGoalTarget, float finalLegLength)
+        {
+            if (pathRoute == null)
+            {
+                return Vector3.zero;
+            }
+
+            if (distance <= routeLength || finalGoalTarget == null || finalLegLength <= Mathf.Epsilon || pathRoute.WaypointCount <= 0)
+            {
+                return pathRoute.GetPointAtDistance(distance);
+            }
+
+            Vector3 lastPoint = pathRoute.GetWaypointPosition(pathRoute.WaypointCount - 1);
+            float extra = Mathf.Clamp(distance - routeLength, 0f, finalLegLength);
+            float t = extra / finalLegLength;
+            return Vector3.Lerp(lastPoint, finalGoalTarget.position, t);
+        }
+
     }
 }

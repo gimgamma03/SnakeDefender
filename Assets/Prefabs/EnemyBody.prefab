@@ -142,5 +142,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.SnakeBodyVisualChain
   discCount: 4
-  discSpacingAlongPath: 0.22
+  discSpacingAlongPath: 0.28
   discPrefab: {fileID: 7012086066412840675, guid: f42798d20b066e64d82888407ab2c36d, type: 3}
+  discOrderStep: -1
+  autoAssignDiscSortingOrder: 1

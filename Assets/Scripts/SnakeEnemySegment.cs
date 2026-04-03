@@ -22,6 +22,8 @@ namespace SnakeDefender
         private bool isFlashing;
 
         public bool CanBeDamaged => canBeDamaged;
+        public float CurrentHp => currentHp;
+        public float MaxHp => maxHp;
 
         public void Initialize(SnakeEnemy enemyOwner, float hp, bool damageable = true)
         {
@@ -41,8 +43,8 @@ namespace SnakeDefender
             }
 
             currentHp -= amount;
-            Debug.Log($"[Segment HP] {name}#{GetInstanceID()} hp: {currentHp:0.##}/{maxHp:0.##}");
             PlayHitFlash();
+            WorldSegmentUIManager.Instance?.NotifyDamage(this, amount, transform.position);
 
             if (currentHp <= 0f)
             {
@@ -105,6 +107,11 @@ namespace SnakeDefender
 
             hitFlashRoutine = null;
             isFlashing = false;
+        }
+
+        private void OnDestroy()
+        {
+            WorldSegmentUIManager.Instance?.Unregister(this);
         }
 
         private void OnDisable()

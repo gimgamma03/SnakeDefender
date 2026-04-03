@@ -26,12 +26,12 @@ namespace SnakeDefender
         private bool isRaged;
         private float baseSpeed;
         private PathRoute route;
-        private GameFlowController gameFlow;
+        private GameManager gameFlow;
 
         public bool IsDead => isDead;
         public int KillScore => killScore;
 
-        public void Initialize(PathRoute pathRoute, GameFlowController flow)
+        public void Initialize(PathRoute pathRoute, GameManager flow)
         {
             route = pathRoute;
             gameFlow = flow;
