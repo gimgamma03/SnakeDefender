@@ -12,6 +12,8 @@ namespace SnakeDefender
         [Header("Required References")]
         [SerializeField] private Canvas rootCanvas;
         [SerializeField] private RectTransform canvasRect;
+        [Tooltip("비우면 canvasRect에 HP/데미지가 붙습니다. 권장: Canvas 아래 전용 패널(Rect stretch)을 두고 할당.")]
+        [SerializeField] private RectTransform worldHudRoot;
 
         [Header("Optional References")]
         [Tooltip("If empty, Camera.main is used.")]
@@ -31,6 +33,9 @@ namespace SnakeDefender
         private readonly Stack<DamageFloatText> damagePool = new Stack<DamageFloatText>();
         private Camera cachedUiCamera;
 
+        /// <summary>월드 좌표 UI(몸통 HP, 데미지 팝업) 부모. worldHudRoot가 없으면 canvasRect.</summary>
+        private RectTransform LayoutRect => worldHudRoot != null ? worldHudRoot : canvasRect;
+
         private class Entry
         {
             public SnakeEnemySegment Segment;
@@ -44,6 +49,11 @@ namespace SnakeDefender
             if (rootCanvas == null || canvasRect == null || hpTextPrefab == null || damageTextPrefab == null)
             {
                 Debug.LogWarning("[WorldSegmentUIManager] Missing required references (Canvas/Rect/HP Text/Damage Text).", this);
+            }
+
+            if (worldHudRoot != null && canvasRect != null && worldHudRoot != canvasRect && !worldHudRoot.IsChildOf(canvasRect))
+            {
+                Debug.LogWarning("[WorldSegmentUIManager] worldHudRoot should be a child of the same Canvas as canvasRect.", this);
             }
         }
 #endif
@@ -116,13 +126,14 @@ namespace SnakeDefender
                     continue;
                 }
 
-                if (canvasRect == null)
+                RectTransform layout = LayoutRect;
+                if (layout == null)
                 {
                     continue;
                 }
 
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                        canvasRect, screenPos, cachedUiCamera, out Vector2 localPoint))
+                        layout, screenPos, cachedUiCamera, out Vector2 localPoint))
                 {
                     e.Root.anchoredPosition = localPoint;
                 }
@@ -136,12 +147,13 @@ namespace SnakeDefender
 
         public void Register(SnakeEnemySegment segment)
         {
-            if (segment == null || hpTextPrefab == null || canvasRect == null)
+            RectTransform layout = LayoutRect;
+            if (segment == null || hpTextPrefab == null || layout == null)
             {
                 return;
             }
 
-            GameObject go = Instantiate(hpTextPrefab, canvasRect);
+            GameObject go = Instantiate(hpTextPrefab, layout);
             RectTransform rt = go.transform as RectTransform;
             if (rt != null)
             {
@@ -188,16 +200,22 @@ namespace SnakeDefender
 
         public void NotifyDamage(SnakeEnemySegment segment, float amount, Vector3 worldPosition)
         {
-            if (damageTextPrefab == null || canvasRect == null)
+            RectTransform layout = LayoutRect;
+            if (damageTextPrefab == null || layout == null)
             {
                 return;
             }
 
             DamageFloatText popup = GetDamagePopup();
+            if (popup == null)
+            {
+                return;
+            }
+
             RectTransform rt = popup.GetComponent<RectTransform>();
             if (rt != null)
             {
-                rt.SetParent(canvasRect, false);
+                rt.SetParent(layout, false);
                 rt.anchorMin = new Vector2(0.5f, 0.5f);
                 rt.anchorMax = new Vector2(0.5f, 0.5f);
                 rt.pivot = new Vector2(0.5f, 0.5f);
@@ -208,7 +226,7 @@ namespace SnakeDefender
                 : worldPosition;
 
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvasRect, screenPos, cachedUiCamera, out Vector2 localPoint) && rt != null)
+                    layout, screenPos, cachedUiCamera, out Vector2 localPoint) && rt != null)
             {
                 rt.anchoredPosition = localPoint;
             }
@@ -224,7 +242,13 @@ namespace SnakeDefender
                 return damagePool.Pop();
             }
 
-            GameObject go = Instantiate(damageTextPrefab, transform);
+            RectTransform layout = LayoutRect;
+            if (damageTextPrefab == null || layout == null)
+            {
+                return null;
+            }
+
+            GameObject go = Instantiate(damageTextPrefab, layout);
             return go.GetComponent<DamageFloatText>();
         }
 
@@ -235,7 +259,16 @@ namespace SnakeDefender
                 return;
             }
 
-            popup.transform.SetParent(transform, false);
+            RectTransform layout = LayoutRect;
+            if (layout != null)
+            {
+                popup.transform.SetParent(layout, false);
+            }
+            else
+            {
+                popup.transform.SetParent(transform, false);
+            }
+
             damagePool.Push(popup);
         }
 

@@ -396,6 +396,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 217358365}
   m_CullTransparentMesh: 1
+--- !u!1 &303777977
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 303777978}
+  - component: {fileID: 303777979}
+  m_Layer: 0
+  m_Name: ObjectPool_Projectile
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &303777978
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 303777977}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 140.5, y: 250, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &303777979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 303777977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7c3e91b2d584f04a8e6f1c2b9d0e3a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.ProjectilePool
+  prefab: {fileID: 3353139238253136125, guid: 154e0c28a4a8d8c42b24eb948089909a, type: 3}
+  prewarmCount: 24
+  allowExpand: 1
 --- !u!1 &329871210
 GameObject:
   m_ObjectHideFlags: 0
@@ -504,6 +551,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.WorldSegmentUIManager
   rootCanvas: {fileID: 526800684}
   canvasRect: {fileID: 526800685}
+  worldHudRoot: {fileID: 2847105502}
   worldCamera: {fileID: 519420031}
   worldOffset: {x: 0.06, y: 0.35, z: 0}
   hpTextPrefab: {fileID: 2743443285027253168, guid: 8e2b5014f2f5b4147989e3ddfff314b8, type: 3}
@@ -617,6 +665,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.DefenderTower
   projectilePrefab: {fileID: 3353139238253136125, guid: 154e0c28a4a8d8c42b24eb948089909a, type: 3}
+  projectilePool: {fileID: 303777979}
   firePoint: {fileID: 132835939}
   muzzleFlashAnimator: {fileID: 605209334}
   muzzleFlashStateName: muzzle_flash_rifle
@@ -740,7 +789,7 @@ GameObject:
   - component: {fileID: 409726927}
   - component: {fileID: 409726926}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: TMP_Victory
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1257,6 +1306,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 2847105502}
   - {fileID: 715110995}
   - {fileID: 1906197046}
   - {fileID: 1624582999}
@@ -2144,7 +2194,7 @@ GameObject:
   - component: {fileID: 1112519265}
   - component: {fileID: 1112519264}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: TMP_Close
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2361,51 +2411,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 90082768}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1413206329
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1413206331}
-  - component: {fileID: 1413206330}
-  m_Layer: 0
-  m_Name: GameResultUI
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1413206330
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1413206329}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f4332b9e68fa234a987097676952d44, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.GameResultUI
-  resultText: {fileID: 0}
---- !u!4 &1413206331
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1413206329}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1484975974
 GameObject:
@@ -2748,7 +2753,7 @@ GameObject:
   - component: {fileID: 1623615944}
   - component: {fileID: 1623615943}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: TMP_Defeat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2963,7 +2968,7 @@ GameObject:
   - component: {fileID: 1639315748}
   - component: {fileID: 1639315747}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: TMP_Close
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3878,6 +3883,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2111555101}
   m_CullTransparentMesh: 1
+--- !u!1 &2847105501
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2847105502}
+  m_Layer: 5
+  m_Name: UI_WorldSegmentHud
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2847105502
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2847105501}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 526800685}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -3889,7 +3929,7 @@ SceneRoots:
   - {fileID: 619394802}
   - {fileID: 90082768}
   - {fileID: 2054600949}
-  - {fileID: 1413206331}
   - {fileID: 369505996}
   - {fileID: 688311220}
   - {fileID: 357459398}
+  - {fileID: 303777978}

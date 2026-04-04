@@ -16,10 +16,36 @@ namespace SnakeDefender
         private Collider2D selfCollider;
         private readonly List<Collider2D> overlapBuffer = new List<Collider2D>(24);
         private static readonly ContactFilter2D SegmentOverlapFilter = ContactFilter2D.noFilter;
+        private ProjectilePool pool;
 
         private void Awake()
         {
             selfCollider = GetComponent<Collider2D>();
+        }
+
+        /// <summary>프리팹을 풀에서만 쓸 때 인스턴스 생성 직후 1회 호출됩니다.</summary>
+        public void BindPool(ProjectilePool owner)
+        {
+            pool = owner;
+        }
+
+        /// <summary>재사용 전 상태 초기화. 풀 전용.</summary>
+        internal void ClearForPool()
+        {
+            initialized = false;
+            hitSegmentIds.Clear();
+        }
+
+        private void Despawn()
+        {
+            if (pool != null)
+            {
+                pool.Release(this);
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
 
         public void Initialize(float projectileDamage, float travelDistance, Vector2 direction)
@@ -46,7 +72,7 @@ namespace SnakeDefender
 
             if (Vector3.Distance(startPosition, transform.position) >= maxTravelDistance)
             {
-                Destroy(gameObject);
+                Despawn();
             }
         }
 
@@ -110,7 +136,7 @@ namespace SnakeDefender
 
             if (dealtAny)
             {
-                Destroy(gameObject);
+                Despawn();
             }
         }
     }

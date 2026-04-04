@@ -6,6 +6,8 @@ namespace SnakeDefender
     {
         [Header("Projectile")]
         [SerializeField] private VerticalProjectile projectilePrefab;
+        [Tooltip("비우면 매번 Instantiate. 넣으면 총알 풀 사용(프리팹은 풀과 동일해야 함).")]
+        [SerializeField] private ProjectilePool projectilePool;
         [SerializeField] private Transform firePoint;
         [SerializeField] private Animator muzzleFlashAnimator;
         [SerializeField] private string muzzleFlashStateName = "muzzle_flash_rifle";
@@ -134,7 +136,22 @@ namespace SnakeDefender
 
         private void SpawnOneProjectile(Vector3 spawnPos, Vector2 direction, float damage)
         {
-            VerticalProjectile projectile = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
+            VerticalProjectile projectile = null;
+            if (projectilePool != null)
+            {
+                projectile = projectilePool.Get(spawnPos, Quaternion.identity);
+            }
+
+            if (projectile == null && projectilePrefab != null)
+            {
+                projectile = Instantiate(projectilePrefab, spawnPos, Quaternion.identity);
+            }
+
+            if (projectile == null)
+            {
+                return;
+            }
+
             projectile.Initialize(damage, maxVerticalRange, direction);
         }
 

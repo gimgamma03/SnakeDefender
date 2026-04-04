@@ -82,18 +82,6 @@ namespace SnakeDefender
             NotifyEnemyReachedGoal();
         }
 
-        // Legacy overloads to avoid breaking older components in scene.
-        public void NotifyEnemyKilled(EnemyUnit enemy)
-        {
-            int score = enemy == null ? 1 : enemy.KillScore;
-            NotifyEnemyKilled(score);
-        }
-
-        public void NotifyEnemyReachedGoal(EnemyUnit enemy)
-        {
-            NotifyEnemyReachedGoal();
-        }
-
         private void PauseGameplayIfNeeded()
         {
             if (pauseTimeOnGameEnd)

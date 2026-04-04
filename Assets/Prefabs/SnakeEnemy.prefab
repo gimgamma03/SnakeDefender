@@ -57,6 +57,8 @@ MonoBehaviour:
   segmentSortingStride: 200
   headHp: 40
   bodyHp: 200
+  bodyHpTierSegmentCount: 3
+  bodyHpBonusPerTier: 0.2
   killScore: 1
   phase1HeadSprite: {fileID: 6009667507342137619, guid: 81fea2a2365f3c045936449d0d6d7cc3, type: 3}
   phase2HeadSprite: {fileID: 6303792427028914062, guid: 1954a233483945c42abea726c4645541, type: 3}
