@@ -1,6 +1,6 @@
 # SnakeDefender
 
-세로 스크롤형 디펜스로, 뱀 형태의 적이 경로를 따라 이동하고 플레이어(타워)가 위로 사격해 몸통·머리 HP를 깎는 구조다. Unity 6 (`6000.3.x` 기준) 프로젝트.
+세로 스크롤형 디펜스. 뱀 형태 적이 경로를 따라 이동하고, 플레이어(타워)가 위로 사격해 몸통·머리 HP를 깎는 구조임. Unity 6 (`6000.3.x` 기준) 프로젝트.
 
 ---
 
@@ -19,19 +19,19 @@
 ## 내부 동작 요약
 
 **적 이동**  
-`PathRoute`에 웨이포인트만 두고, 스플라인 패키지는 쓰지 않았다. 경로 길이를 구간별로 누적해 두고 `GetPointAtDistance`로 거리만큼 진행한 좌표를 구한다. `SnakeEnemy`가 머리 진행 거리(`headDistance`)를 매 프레임 올리고, 세그먼트별로 뒤에 붙은 거리만큼 뒤로 밀어서 뱀 모양을 맞춘다. 마지막 구간은 마지막 웨이포인트에서 `finalGoalTarget`(플레이어)까지 직선 보간으로 이어진다.
+`PathRoute`는 웨이포인트만 사용, 스플라인 패키지 미사용. 경로 길이를 구간별로 누적해 두고 `GetPointAtDistance`로 거리만큼 진행한 좌표를 구함. `SnakeEnemy`가 머리 진행 거리(`headDistance`)를 매 프레임 올리고, 세그먼트별로 뒤에 붙은 거리만큼 밀어서 뱀 모양을 맞춤. 마지막 구간은 마지막 웨이포인트에서 `finalGoalTarget`(플레이어)까지 직선 보간으로 **이어짐**.
 
 **몸통 파괴 후 머리 당김**  
-몸통 세그먼트가 파괴되면 `OnSegmentDestroyed`에서 세그먼트 리스트에서 제거한 뒤, `headDistance`에서 `segmentSpacing`만큼 줄여서 머리가 앞으로 한 칸 당겨진 것처럼 보이게 했다.
+몸통 세그먼트 파괴 시 `OnSegmentDestroyed`에서 리스트에서 제거한 뒤, `headDistance`에서 `segmentSpacing`만큼 줄여 머리가 앞으로 한 칸 당겨진 것처럼 보이게 함.
 
 **영웅(타워) 공격**  
-`DefenderTower`가 위쪽으로 `Physics2D.RaycastNonAlloc`로 가장 가까운 맞을 수 있는 세그먼트를 고르고, 쿨마다 `VerticalProjectile`을 발사한다. 총알은 트리거로 겹친 `SnakeEnemySegment`에 데미지를 주고, 세그먼트는 HP 감소 후 0이면 파괴 처리로 이어진다.
+`DefenderTower`가 위쪽으로 `Physics2D.RaycastNonAlloc`로 가장 가까운 맞을 수 있는 세그먼트를 고르고, 쿨마다 `VerticalProjectile` 발사. 총알은 트리거로 겹친 `SnakeEnemySegment`에 데미지 → HP 감소 → 0이면 파괴 처리로 **이어짐**.
 
 **승리·실패**  
-`GameManager`가 전체 처치 목표 수(`totalEnemyCount`)와 처치 수를 맞추면 승리 이벤트, 머리가 플레이어 접촉 판정을 일정 시간 유지하거나 머리가 궤적 끝(도착)까지 가면 실패로 처리한다.
+`GameManager`에서 전체 처치 목표(`totalEnemyCount`)와 처치 수가 맞으면 승리 이벤트. 머리가 플레이어 접촉 판정을 일정 시간 유지하거나 궤적 끝(도착)까지 가면 실패로 처리함.
 
 **광폭화(선택)**  
-`SnakeEnemy`에서 몸통 파괴 수에 따라 머리 스프라이트 단계 전환·분노 상태를 넣었고, 분노 중에는 이동 속도 배율을 올린다. (표정은 스프라이트 교체로 표현.)
+`SnakeEnemy`에서 몸통 파괴 수에 따라 머리 스프라이트 단계 전환·분노 상태 넣음, 분노 중 이동 속도 배율 상승. 표정은 스프라이트 교체로 표현.
 
 **기타**  
-UI로 몸통 HP·데미지 숫자는 `WorldSegmentUIManager`가 월드 좌표를 캔버스 좌표로 붙인다. 시작 시 일시정지·시작 버튼·ESC 종료 등은 `GameManager`에서 다룬다.
+몸통 HP·데미지 숫자 UI는 `WorldSegmentUIManager`가 월드 좌표를 캔버스에 붙임. 시작 시 일시정지·시작 버튼·ESC 종료 등은 `GameManager`에서 담당.
