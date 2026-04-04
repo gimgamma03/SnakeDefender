@@ -53,6 +53,12 @@ namespace SnakeDefender
                 yield break;
             }
 
+            yield return new WaitUntil(() =>
+            {
+                var gm = GameManager.Instance;
+                return gm == null || gm.HasGameplayBegun;
+            });
+
             if (delayBeforeSpawn > 0f)
             {
                 yield return new WaitForSeconds(delayBeforeSpawn);

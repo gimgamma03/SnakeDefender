@@ -167,7 +167,7 @@ namespace SnakeDefender
             }
             Destroy(destroyedSegment.gameObject);
             destroyedBodyCount++;
-            gameFlow?.NotifyEnemyKilled(1);
+            gameFlow?.NotifyEnemyKilled(killScore);
             PlayerUpgradeScheduler.Instance?.RegisterBodySegmentDestroyed();
             EvaluateHeadStateByDestroyedBodies();
 

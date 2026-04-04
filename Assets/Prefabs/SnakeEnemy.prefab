@@ -56,15 +56,15 @@ MonoBehaviour:
   firstBodySpacingMultiplier: 0.2
   segmentSortingStride: 200
   headHp: 40
-  bodyHp: 200
+  bodyHp: 210
   bodyHpTierSegmentCount: 3
   bodyHpBonusPerTier: 0.2
   killScore: 1
   phase1HeadSprite: {fileID: 6009667507342137619, guid: 81fea2a2365f3c045936449d0d6d7cc3, type: 3}
   phase2HeadSprite: {fileID: 6303792427028914062, guid: 1954a233483945c42abea726c4645541, type: 3}
-  head1RageTriggerDestroyedBodies: 3
-  phase2TriggerDestroyedBodies: 6
-  head2RageTriggerDestroyedBodies: 9
-  rageDuration: 2
-  rageSpeedMultiplier: 1.5
-  rageTintColor: {r: 0.9245283, g: 0.2660199, b: 0.2660199, a: 1}
+  head1RageTriggerDestroyedBodies: 4
+  phase2TriggerDestroyedBodies: 10
+  head2RageTriggerDestroyedBodies: 15
+  rageDuration: 3
+  rageSpeedMultiplier: 3.2
+  rageTintColor: {r: 0.745283, g: 0.08085619, b: 0.60472745, a: 1}

@@ -1,5 +1,9 @@
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace SnakeDefender
 {
@@ -18,8 +22,22 @@ namespace SnakeDefender
         [Tooltip("승리 또는 패배 시 timeScale을 0으로 설정해 진행을 멈춤.")]
         [SerializeField] private bool pauseTimeOnGameEnd = true;
 
+        [Header("시작")]
+        [Tooltip("켜면 씬 로드 직후 timeScale 0. UI 버튼에서 BeginGameplay() 호출로 시작.")]
+        [SerializeField] private bool pauseAtStart = true;
+        [Tooltip("시작 버튼(또는 패널) 오브젝트. 씬에서는 비활성화해 두고, pauseAtStart일 때 플레이 진입 시 자동으로 켬.")]
+        [SerializeField] private GameObject startScreenRoot;
+        [SerializeField] private UnityEvent onGameplayStarted;
+
+        [Header("테스트")]
+        [Tooltip("에디터·빌드에서 ESC로 플레이 종료(빌드 테스트용).")]
+        [SerializeField] private bool quitOnEscape = true;
+
         private int killedCount;
         private bool finished;
+
+        /// <summary>시작 버튼 누른 뒤 true. pauseAtStart가 꺼져 있으면 Awake에서 곧바로 true.</summary>
+        public bool HasGameplayBegun { get; private set; }
 
         private void Awake()
         {
@@ -30,7 +48,49 @@ namespace SnakeDefender
             }
 
             Instance = this;
+
+            if (pauseAtStart)
+            {
+                Time.timeScale = 0f;
+                HasGameplayBegun = false;
+                if (startScreenRoot != null)
+                {
+                    startScreenRoot.SetActive(true);
+                }
+            }
+            else
+            {
+                Time.timeScale = 1f;
+                HasGameplayBegun = true;
+            }
+        }
+
+        private void Update()
+        {
+            if (!quitOnEscape || !WasEscapePressedThisFrame())
+            {
+                return;
+            }
+
+            QuitFromEscape();
+        }
+
+        private static bool WasEscapePressedThisFrame()
+        {
+            // 빌드에서 Keyboard.current가 null인 경우가 있어 장치 조회로 보강
+            Keyboard kb = Keyboard.current ?? InputSystem.GetDevice<Keyboard>();
+            return kb != null && kb.escapeKey.wasPressedThisFrame;
+        }
+
+        private void QuitFromEscape()
+        {
+#if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+#else
+            // timeScale 0이면 Quit이 기대대로 동작하지 않거나 창이 멈춘 것처럼 보이는 경우가 있음
             Time.timeScale = 1f;
+            Application.Quit();
+#endif
         }
 
         private void OnDestroy()
@@ -80,6 +140,19 @@ namespace SnakeDefender
         public void NotifyPlayerDefeated()
         {
             NotifyEnemyReachedGoal();
+        }
+
+        // 시작 UI 버튼 OnClick에 연결.
+        public void BeginGameplay()
+        {
+            if (HasGameplayBegun)
+            {
+                return;
+            }
+
+            HasGameplayBegun = true;
+            Time.timeScale = 1f;
+            onGameplayStarted?.Invoke();
         }
 
         private void PauseGameplayIfNeeded()
