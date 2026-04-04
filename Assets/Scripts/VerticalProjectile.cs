@@ -23,13 +23,13 @@ namespace SnakeDefender
             selfCollider = GetComponent<Collider2D>();
         }
 
-        /// <summary>프리팹을 풀에서만 쓸 때 인스턴스 생성 직후 1회 호출됩니다.</summary>
+        // 풀 쓸 거면 만들자마자 한 번만 BindPool 호출하면 됨.
         public void BindPool(ProjectilePool owner)
         {
             pool = owner;
         }
 
-        /// <summary>재사용 전 상태 초기화. 풀 전용.</summary>
+        // 풀에 넣기 전에 상태만 비우는 용도임.
         internal void ClearForPool()
         {
             initialized = false;
@@ -56,7 +56,7 @@ namespace SnakeDefender
             initialized = true;
             hitSegmentIds.Clear();
             moveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector2.up;
-            // Align projectile sprite with travel direction.
+            // 날아가는 방향이랑 스프라이트 맞추려고 회전시키는 거임.
             float angle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg - 90f;
             transform.rotation = Quaternion.Euler(0f, 0f, angle);
         }
@@ -83,9 +83,7 @@ namespace SnakeDefender
                 return;
             }
 
-            // Resolve every segment whose collider currently overlaps this bullet.
-            // (Two body segments in the same overlap region used to only receive one TakeDamage
-            // because we destroyed the projectile on the first trigger callback.)
+            // 겹쳐있는 몸통 콜라이더 전부 찾아서 맞춤. 예전엔 첫 트리거에서 총알 없애서 한쪽만 맞았음.
             TryApplyDamageToAllOverlappingSegments();
         }
 
@@ -126,7 +124,7 @@ namespace SnakeDefender
                 int segmentId = segment.GetInstanceID();
                 if (!hitSegmentIds.Add(segmentId))
                 {
-                    // Same segment can have multiple disc colliders; damage once per projectile.
+                    // 디스크 콜라이더 여러 개면 같은 세그먼트가 중복으로 들어올 수 있어서 한 발당 한 번만 맞추는 거임.
                     continue;
                 }
 

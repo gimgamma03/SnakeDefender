@@ -2,10 +2,7 @@ using UnityEngine;
 
 namespace SnakeDefender
 {
-    /// <summary>
-    /// 한 gameplay 몸통 칸(SnakeEnemySegment)에 붙여, 경로를 따라 겹쳐 보이는 디스크를 여러 개 배치합니다.
-    /// 피격/체력은 루트의 SnakeEnemySegment(+ Collider)만 사용합니다.
-    /// </summary>
+    // 몸통 한 칸(SnakeEnemySegment)에 붙이는 거고, 경로 따라 디스크 여러 개 겹쳐 보이게 배치하는 거임. 맞는 건 루트 세그먼트랑 콜라이더만 씀.
     public class SnakeBodyVisualChain : MonoBehaviour
     {
         [SerializeField] private int discCount = 4;
@@ -87,7 +84,7 @@ namespace SnakeDefender
             SpriteRenderer[] renderers = discObject.GetComponentsInChildren<SpriteRenderer>(true);
             for (int i = 0; i < renderers.Length; i++)
             {
-                // Keep all visuals of one disc at same order.
+                // 디스크 하나 안에서는 정렬 순서 같게 맞추는 거임.
                 renderers[i].sortingOrder = segmentBaseSortingOrder + (discIndex * discOrderStep);
             }
         }

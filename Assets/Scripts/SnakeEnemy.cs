@@ -6,38 +6,38 @@ namespace SnakeDefender
 {
     public class SnakeEnemy : MonoBehaviour
     {
-        [Header("Optional Runtime Overrides")]
-        [Tooltip("Usually injected by spawner on Initialize().")]
+        [Header("런타임 덮어쓰기 (스포너)")]
+        [Tooltip("경로. 스포너 Initialize 시 설정. 비우면 프리팹 기본값.")]
         [SerializeField] private PathRoute route;
         [SerializeField] private float moveSpeed = 1.5f;
-        [Tooltip("Player transform. If empty, defeat-on-contact check is skipped.")]
+        [Tooltip("플레이어(타워). 비우면 머리 접촉 패배 판정을 하지 않음.")]
         [SerializeField] private Transform finalGoalTarget;
 
-        [Header("Tuning")]
+        [Header("조절")]
         [SerializeField] private float playerContactRadius = 0.2f;
         [SerializeField] private float playerContactDefeatDelay = 0.3f;
 
-        [Header("Required Prefabs")]
+        [Header("필수 프리팹")]
         [SerializeField] private SnakeEnemySegment headPrefab;
         [SerializeField] private SnakeEnemySegment bodyPrefab;
 
-        [Header("Shape")]
-        [Tooltip("Gameplay body parts behind the head. Each part can use one prefab with many child sprites for visuals.")]
+        [Header("모양")]
+        [Tooltip("머리 말고 몸통 몇 칸인지. 칸마다 프리팹 하나에 디스크 여러 개 얹어도 됨.")]
         [SerializeField] private int bodyCount = 10;
         [SerializeField] private float segmentSpacing = 0.45f;
         [SerializeField] private float firstBodySpacingMultiplier = 0.8f;
         [SerializeField] private int segmentSortingStride = 100;
 
-        [Header("Stats")]
+        [Header("스탯")]
         [SerializeField] private float headHp = 40f;
         [SerializeField] private float bodyHp = 60f;
-        [Tooltip("몸통을 앞에서부터 이 개수마다 한 티어로 나누고, 뒤 티어마다 아래 비율만큼 최대 HP가 증가합니다.")]
+        [Tooltip("몸통 N개마다 HP 티어 구분(예: 앞에서부터 3개 단위).")]
         [SerializeField] private int bodyHpTierSegmentCount = 3;
-        [Tooltip("티어가 1 올라갈 때마다 기준 bodyHp에 곱해 더하는 비율 (0.1 = +10%씩).")]
+        [Tooltip("티어 상승 시 bodyHp에 가산할 비율. 0.1이면 티어마다 +10%.")]
         [SerializeField] private float bodyHpBonusPerTier = 0.1f;
         [SerializeField] private int killScore = 1;
 
-        [Header("Head Phase / Rage")]
+        [Header("머리 단계 / 분노")]
         [SerializeField] private Sprite phase1HeadSprite;
         [SerializeField] private Sprite phase2HeadSprite;
         [SerializeField] private int head1RageTriggerDestroyedBodies = 3;
@@ -171,11 +171,11 @@ namespace SnakeDefender
             PlayerUpgradeScheduler.Instance?.RegisterBodySegmentDestroyed();
             EvaluateHeadStateByDestroyedBodies();
 
-            // Pull head/front body one slot backward after a body break.
+            // 몸통 하나 터지면 앞쪽이 한 칸 당겨지는 느낌으로 headDistance 줄이는 거임.
             headDistance = Mathf.Max(0f, headDistance - segmentSpacing);
             RefreshSegmentPositions();
 
-            // Head is a progress marker; enemy is considered dead when all body segments are gone.
+            // 머리는 진행용이고 몸통 다 없으면 이 스네이크는 끝난 거임.
             if (segments.Count <= 1)
             {
                 dead = true;
@@ -211,7 +211,7 @@ namespace SnakeDefender
                 int tier = i / tierSize;
                 float scaledHp = bodyHp * (1f + bonus * tier);
                 body.Initialize(this, scaledHp);
-                // First body should follow the head immediately from start.
+                // 첫 몸통만 처음부터 켜두고 나머지는 거리 되면 켜짐.
                 body.gameObject.SetActive(i == 0);
                 AddSegment(body);
             }

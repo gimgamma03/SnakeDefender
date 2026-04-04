@@ -3,10 +3,7 @@ using UnityEngine;
 
 namespace SnakeDefender
 {
-    /// <summary>
-    /// 한 종류의 <see cref="VerticalProjectile"/>만 담는 로컬 풀. 태그/싱글톤 없이 인스펙터에 프리팹만 넣고,
-    /// 타워 등에서 참조해 <see cref="Get"/> / 총알 쪽 <see cref="VerticalProjectile.ReleaseToPool"/>로 사용합니다.
-    /// </summary>
+    // VerticalProjectile 한 종류만 담는 로컬 풀임. 태그 싱글톤 없고 프리팹만 인스펙터에 넣으면 됨. 타워에서 Get 하고 총알은 Initialize 부르면 됨.
     public class ProjectilePool : MonoBehaviour
     {
         [SerializeField] private VerticalProjectile prefab;
@@ -41,7 +38,7 @@ namespace SnakeDefender
             return p;
         }
 
-        /// <summary>월드에 꺼낸 총알. 호출 측에서 <see cref="VerticalProjectile.Initialize"/> 호출.</summary>
+        // 꺼낸 다음에 바깥에서 Initialize 호출해야 함.
         public VerticalProjectile Get(Vector3 position, Quaternion rotation)
         {
             if (prefab == null)

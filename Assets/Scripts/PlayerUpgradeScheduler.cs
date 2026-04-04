@@ -4,35 +4,33 @@ using UnityEngine.UI;
 
 namespace SnakeDefender
 {
-    /// <summary>
-    /// 몸통 파괴 N개마다 업그레이드 패널 표시. UI는 Upgrade Ui Root 에 패널만 연결.
-    /// </summary>
+    // 몸통 N개 깰 때마다 업그레이드 창 띄우는 거임. UI는 upgradeUiRoot에 패널만 묶어두면 됨.
     public class PlayerUpgradeScheduler : MonoBehaviour
     {
         public static PlayerUpgradeScheduler Instance { get; private set; }
 
-        [Header("Tower (플레이어)")]
-        [Tooltip("비우면 같은 GameObject 의 DefenderTower 를 사용.")]
+        [Header("타워")]
+        [Tooltip("비우면 같은 GameObject의 DefenderTower를 사용.")]
         [SerializeField] private DefenderTower tower;
 
-        [Header("Trigger")]
-        [Tooltip("몸통 세그먼트를 이 개수만큼 파괴할 때마다 업그레이드 1회 제공.")]
+        [Header("업그레이드 조건")]
+        [Tooltip("몸통 세그먼트를 이 횟수만큼 파괴할 때마다 업그레이드 1회.")]
         [SerializeField] private int bodiesDestroyedPerUpgrade = 2;
 
-        [Header("Optional")]
-        [Tooltip("비우면 GameManager.Instance 로 판정.")]
+        [Header("기타")]
+        [Tooltip("비우면 GameManager.Instance로 게임 종료 여부를 확인.")]
         [SerializeField] private GameManager gameManager;
-        [Tooltip("체크 시 업그레이드 제안 시점에 Time.timeScale = 0. UI에서 선택 후 ResumeTime 호출 필요.")]
+        [Tooltip("켜면 업그레이드 대기 중 timeScale 0. 선택 후 FinishUpgradeChoice로 복구.")]
         [SerializeField] private bool pauseTimeWhileUpgradePending;
 
-        [Header("Upgrade UI (이것만 켜고 끔)")]
-        [Tooltip("Canvas 전체가 아니라, 3개 버튼을 감싼 패널 하나만 연결.")]
+        [Header("업그레이드 UI")]
+        [Tooltip("Canvas 전체가 아니라 버튼 묶음 패널만 연결.")]
         [SerializeField] private GameObject upgradeUiRoot;
-        [Tooltip("총알 수 업그레이드 버튼. 최대 단계면 interactable=false.")]
+        [Tooltip("총알 수 업그레이드 버튼. 최대 단계면 비활성.")]
         [SerializeField] private Button bulletUpgradeButton;
-        [Tooltip("버튼 자식: 업 가능할 때 보여줄 오브젝트(예: 공격 문구 TMP 부모).")]
+        [Tooltip("업그레이드 가능 시 표시할 자식 오브젝트(문구 등).")]
         [SerializeField] private GameObject bulletUpgradeNormalContent;
-        [Tooltip("버튼 자식: 최대 단계일 때 보여줄 오브젝트(예: 최대 TMP 부모).")]
+        [Tooltip("최대 단계일 때 표시할 자식 오브젝트.")]
         [FormerlySerializedAs("bulletUpgradeMaxLabel")]
         [SerializeField] private GameObject bulletUpgradeMaxContent;
 
@@ -75,7 +73,7 @@ namespace SnakeDefender
             }
         }
 
-        /// <summary>SnakeEnemy 가 몸통 파괴 시 호출.</summary>
+        // SnakeEnemy에서 몸통 터질 때 부르는 거임.
         public void RegisterBodySegmentDestroyed()
         {
             if (tower == null)
@@ -115,7 +113,7 @@ namespace SnakeDefender
                     rt.SetAsLastSibling();
                 }
 
-                // Defensive: if CanvasGroup exists, make sure panel can receive clicks.
+                // CanvasGroup 있으면 알파랑 클릭 받게 맞춰두는 거임.
                 if (upgradeUiCanvasGroup == null)
                 {
                     upgradeUiCanvasGroup = upgradeUiRoot.GetComponent<CanvasGroup>();

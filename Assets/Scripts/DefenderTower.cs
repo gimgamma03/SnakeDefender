@@ -4,30 +4,30 @@ namespace SnakeDefender
 {
     public class DefenderTower : MonoBehaviour
     {
-        [Header("Projectile")]
+        [Header("총알")]
         [SerializeField] private VerticalProjectile projectilePrefab;
-        [Tooltip("비우면 매번 Instantiate. 넣으면 총알 풀 사용(프리팹은 풀과 동일해야 함).")]
+        [Tooltip("풀이 없으면 발사할 때마다 생성. 풀을 넣으면 재사용 (프리팹은 풀과 동일해야 함).")]
         [SerializeField] private ProjectilePool projectilePool;
         [SerializeField] private Transform firePoint;
         [SerializeField] private Animator muzzleFlashAnimator;
         [SerializeField] private string muzzleFlashStateName = "muzzle_flash_rifle";
         [SerializeField] private string muzzleFlashTrigger = "Fire";
 
-        [Header("Attack")]
+        [Header("사격")]
         [SerializeField] private float maxVerticalRange = 15f;
         [SerializeField] private float attackDamage = 15f;
         [SerializeField] private float attackInterval = 0.6f;
         [SerializeField] private LayerMask enemyMask;
         [SerializeField] private int raycastBufferSize = 32;
 
-        [Header("Upgrades (스펙업)")]
-        [Tooltip("공격력 업그레이드 1회당 배율 가산 (예: 0.2 = +20%).")]
+        [Header("업그레이드 수치")]
+        [Tooltip("공격력 업그레이드 1회당 배율 가산 (예: 0.2 ≈ +20%).")]
         [SerializeField] private float attackPowerBonusPerLevel = 0.2f;
-        [Tooltip("공격속도 업그레이드 1회당 공격 간격에 곱함 (예: 0.9 = 10% 빨라짐).")]
+        [Tooltip("공격 속도 업그레이드 1회당 공격 간격에 곱함 (예: 0.9면 약 10% 단축).")]
         [SerializeField] private float attackIntervalScalePerSpeedLevel = 0.9f;
-        [Tooltip("총알 수 업 1단계당 좌/우 발사 각도 간격(도). 보통 5~10.")]
+        [Tooltip("총알 수 업그레이드 1단계당 좌·우 발사 각 간격(도). 보통 5~10.")]
         [SerializeField] private float bulletSpreadStepDegrees = 7f;
-        [Tooltip("총알 수 업그레이드 최대 단계. 3이면 최대 7발(중앙 1 + 좌우 3쌍).")]
+        [Tooltip("총알 수 업그레이드 최대 단계. 3이면 중앙 1 + 좌우 3쌍으로 최대 7발.")]
         [SerializeField] private int maxBulletCountUpgradeLevel = 3;
 
         private int attackPowerLevel;
@@ -92,7 +92,7 @@ namespace SnakeDefender
         public bool IsBulletCountUpgradeMaxed =>
             maxBulletCountUpgradeLevel <= 0 || bulletCountUpgradeLevel >= maxBulletCountUpgradeLevel;
 
-        /// <returns>최대치면 false (단계 증가 없음).</returns>
+        // 맥스면 false 나옴. 단계 안 올라감.
         public bool TryApplyBulletCountUpgrade()
         {
             if (IsBulletCountUpgradeMaxed)

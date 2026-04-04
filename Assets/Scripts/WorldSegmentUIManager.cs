@@ -9,31 +9,32 @@ namespace SnakeDefender
     {
         public static WorldSegmentUIManager Instance { get; private set; }
 
-        [Header("Required References")]
+        [Header("필수 참조")]
         [SerializeField] private Canvas rootCanvas;
         [SerializeField] private RectTransform canvasRect;
-        [Tooltip("비우면 canvasRect에 HP/데미지가 붙습니다. 권장: Canvas 아래 전용 패널(Rect stretch)을 두고 할당.")]
+        [Tooltip("HP·데미지 숫자의 부모 Rect. 비우면 캔버스 루트에 배치. 전체 화면 패널 권장.")]
         [SerializeField] private RectTransform worldHudRoot;
 
-        [Header("Optional References")]
-        [Tooltip("If empty, Camera.main is used.")]
+        [Header("선택 참조")]
+        [Tooltip("비우면 Main Camera.")]
         [SerializeField] private Camera worldCamera;
         [SerializeField] private Vector3 worldOffset = new Vector3(0.06f, 0.35f, 0f);
 
-        [Header("Prefabs")]
-        [Tooltip("몸통 HP 숫자(TMP). 슬라이더 불필요.")]
+        [Header("프리팹")]
+        [Tooltip("몸통 위 HP 표시용 프리팹(TextMeshPro 등).")]
         [FormerlySerializedAs("hpBarPrefab")]
         [SerializeField] private GameObject hpTextPrefab;
+        [Tooltip("피해 시 표시할 데미지 숫자 프리팹. HP와 동일 구조로 재사용 가능.")]
         [SerializeField] private GameObject damageTextPrefab;
 
-        [Header("Damage popup")]
+        [Header("데미지 색")]
         [SerializeField] private Color damageColor = Color.white;
 
         private readonly List<Entry> entries = new List<Entry>();
         private readonly Stack<DamageFloatText> damagePool = new Stack<DamageFloatText>();
         private Camera cachedUiCamera;
 
-        /// <summary>월드 좌표 UI(몸통 HP, 데미지 팝업) 부모. worldHudRoot가 없으면 canvasRect.</summary>
+        // 몸통 HP랑 데미지 숫자 붙일 부모. worldHudRoot 비었으면 canvasRect 씀.
         private RectTransform LayoutRect => worldHudRoot != null ? worldHudRoot : canvasRect;
 
         private class Entry

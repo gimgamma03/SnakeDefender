@@ -7,7 +7,7 @@ namespace SnakeDefender
     {
         [SerializeField] private float maxHp = 30f;
 
-        [Header("Hit feedback (all child sprites are one body part)")]
+        [Header("피격 피드백 (자식 스프라이트 포함, 세그먼트 단위)")]
         [SerializeField] private Color hitTint = new Color(1f, 0.35f, 0.35f, 1f);
         [SerializeField] private float hitFlashDuration = 0.1f;
 
@@ -64,8 +64,7 @@ namespace SnakeDefender
 
         private void PlayHitFlash()
         {
-            // Visual discs can be created after Initialize.
-            // Avoid recaching original colors while actively flashing (prevents 'stuck red' state).
+            // 디스크는 Initialize 뒤에 생길 수 있어서. 플래시 도는 중에 다시 캐시하면 색 꼬여서 빨간색 고정되는 거 방지하려는 거임.
             if (!isFlashing)
             {
                 CacheVisualRenderers();

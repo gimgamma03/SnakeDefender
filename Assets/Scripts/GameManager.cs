@@ -10,12 +10,12 @@ namespace SnakeDefender
         [SerializeField] private int totalEnemyCount;
         public int TotalEnemyCount => totalEnemyCount;
 
-        [Header("Events")]
+        [Header("승리·패배 이벤트")]
         [SerializeField] private UnityEvent onVictory;
         [SerializeField] private UnityEvent onDefeat;
 
-        [Header("Game Over")]
-        [Tooltip("승리/패배 시 Time.timeScale = 0 으로 게임플레이 정지.")]
+        [Header("종료 시")]
+        [Tooltip("승리 또는 패배 시 timeScale을 0으로 설정해 진행을 멈춤.")]
         [SerializeField] private bool pauseTimeOnGameEnd = true;
 
         private int killedCount;
@@ -90,7 +90,7 @@ namespace SnakeDefender
             }
         }
 
-        /// <summary>재시작/메뉴 복귀 등에서 호출. (Time.timeScale은 씬 전환 후에도 유지될 수 있음)</summary>
+        // 재시작이나 메뉴 갈 때 부르면 됨. timeScale은 씬 넘어가도 안 풀릴 수 있어서 따로 리셋하는 거임.
         public static void ResetTimeScale()
         {
             Time.timeScale = 1f;

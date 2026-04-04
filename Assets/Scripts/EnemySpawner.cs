@@ -5,17 +5,17 @@ namespace SnakeDefender
 {
     public class EnemySpawner : MonoBehaviour
     {
-        [Header("Required References")]
+        [Header("필수 참조")]
         [SerializeField] private SnakeEnemy enemyPrefab;
         [SerializeField] private PathRoute route;
         [SerializeField] private GameManager gameFlow;
 
-        [Header("Optional References")]
-        [Tooltip("If empty, snake uses its own final goal from prefab/initialize defaults.")]
+        [Header("선택 참조")]
+        [Tooltip("비우면 뱀 프리팹 또는 초기화 기본값의 목표를 사용.")]
         [SerializeField] private Transform finalGoalTarget;
 
-        [Header("Tuning")]
-        [Tooltip("One wave = one snake (one head). Body part count is set on the SnakeEnemy prefab.")]
+        [Header("스폰 간격")]
+        [Tooltip("웨이브당 뱀 한 마리(머리 하나). 몸통 개수는 SnakeEnemy 프리팹에서 설정.")]
         [SerializeField] private float delayBeforeSpawn;
 
 #if UNITY_EDITOR
