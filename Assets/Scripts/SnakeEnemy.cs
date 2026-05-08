@@ -183,6 +183,7 @@ namespace SnakeDefender
             }
         }
 
+        //헤드와 몸통 생성
         private void BuildSegments()
         {
             for (int i = 0; i < transform.childCount; i++)
@@ -219,6 +220,7 @@ namespace SnakeDefender
             StartCoroutine(RegisterDamageableSegmentsWithUiNextFrame());
         }
 
+        //몸통에 HP바 뜨게 하는 함수
         private IEnumerator RegisterDamageableSegmentsWithUiNextFrame()
         {
             yield return null;
@@ -236,6 +238,9 @@ namespace SnakeDefender
                 }
             }
         }
+
+        //각 조각들의 위치 재배치 하는 함수
+        //GetDistanceBehindHead : 머리 바로 뒤 몸통과, 몸통뒤의 몸통이 간격 규칙이 달라서 쓰는 함수
 
         private void RefreshSegmentPositions()
         {
@@ -312,6 +317,7 @@ namespace SnakeDefender
             return routeLength + finalLegLength;
         }
 
+        //거리값을 경로상의 월드 좌표로 바꿔줌
         private Vector3 GetTrackPoint(float distance)
         {
             if (route == null)
@@ -330,6 +336,7 @@ namespace SnakeDefender
             return Vector3.Lerp(lastPoint, finalGoalTarget.position, t);
         }
 
+        //i 번째 세그먼트가 머리에서 얼마나 떨어져야 하는지 계산하는 함수
         private float GetDistanceBehindHead(int segmentIndex)
         {
             if (segmentIndex <= 0)

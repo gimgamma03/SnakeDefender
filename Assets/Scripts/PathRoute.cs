@@ -32,6 +32,8 @@ namespace SnakeDefender
             return waypoints[index].position;
         }
 
+        //distance 까지 간 위치가 몇번째 인덱스 이후 얼만큼 간건지 계산하는 함수
+        //웨이 포인트 사이의 거리를 Lerp로 비율로 계산해서 리턴
         public Vector3 GetPointAtDistance(float distance)
         {
             BuildCacheIfNeeded();
@@ -80,6 +82,7 @@ namespace SnakeDefender
             }
         }
 
+        //웨이포인트 간 거리 사용할 일이 많아 계산해서 캐싱하는 함수
         private void BuildCacheIfNeeded()
         {
             if (cacheBuilt)
@@ -114,6 +117,7 @@ namespace SnakeDefender
             cacheBuilt = true;
         }
 
+        //씬에서 경로 확인용
         private void OnDrawGizmosSelected()
         {
             if (waypoints == null || waypoints.Length < 2)
