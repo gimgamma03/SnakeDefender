@@ -2,8 +2,6 @@
 
 세로 스크롤형 타워 디펜스. 분절형 뱀 적이 웨이포인트 경로를 따라 내려오고, 화면 하단의 타워가 위쪽으로 사격해 머리·몸통 HP 를 깎는 구조.
 
-외부 패키지(Unity Splines 등) 의존 없이 **순수 Unity API 만으로 디펜스 한 사이클을 구현한 개인 작업물**입니다.
-
 **플레이 영상** → https://youtu.be/CHhoJfeY6Qs
 
 ---
@@ -16,8 +14,6 @@
 | 인원 | 1인 (개인 작업) |
 | 기간 | 약 1~2주 |
 | 엔진 | Unity 6 (`6000.3.x`) |
-| 언어 | C# |
-| 입력 | Unity Input System |
 
 ---
 
@@ -34,11 +30,6 @@
 - **다탄 발사 / 강화 단계** — 강화 단계에 따라 좌·우 대칭 각도로 추가 발사
 - **오브젝트 풀링** — `ProjectilePool` 로 총알 재사용 (`RaycastNonAlloc` 병행)
 - **드래그 이동** — 마우스/터치로 화면 안에서 타워를 좌우로 이동
-
-### 게임 플로우
-- **승패 판정** — 목표 처치 수 달성 시 승리 / 머리 접촉 또는 경로 끝 도달 시 패배
-- **시작 일시정지** — 시작 버튼 누르기 전까지 `Time.timeScale = 0` 으로 대기
-- **빌드 종료 키** — ESC 즉시 종료 (빌드 테스트 편의)
 
 ### UI / 연출
 - **월드 기준 HP 바** — 몸통 위에 부착, 카메라/스크린 동기화 (`WorldSegmentUIManager`)
@@ -67,15 +58,6 @@
 
 ---
 
-## 기술 스택
-- **엔진**: Unity 6 (`6000.3.x`)
-- **언어**: C# (.NET Standard 2.1)
-- **입력**: Unity Input System
-- **그래픽**: 2D Sprite Renderer
-- **물리/탐지**: Physics2D `RaycastNonAlloc`
-
----
-
 ## 주요 스크립트
 
 | 스크립트 | 역할 |
@@ -84,23 +66,11 @@
 | `SnakeEnemy.cs` | 뱀 적 본체, 세그먼트 관리·상태 전이·이동 |
 | `SnakeEnemySegment.cs` | 세그먼트 단위 HP / 피격 처리 |
 | `SnakeBodyVisualChain.cs` | 몸통 디스크 시각 체인 |
-| `DefenderTower.cs` | 타워 사격·강화 적용 |
-| `ProjectilePool.cs` | 발사체 풀링 |
-| `VerticalProjectile.cs` | 발사체 동작·데미지 전달 |
 | `PlayerUpgradeScheduler.cs` | 강화 UI·단계 관리 |
 | `WorldSegmentUIManager.cs` | 월드→스크린 HP 바 동기화 |
-| `GameManager.cs` | 게임 시작 / 승패 / 일시정지 |
-
----
-
-## 빌드 / 실행
-1. Unity Hub 에서 `6000.3.x` 이상 버전으로 프로젝트 열기
-2. `Assets/Scenes` 메인 씬 실행
-3. 시작 버튼을 눌러 게임플레이 시작
 
 ---
 
 ## 개선 과제
 - `SnakeEnemy.cs` 단일 책임 분리 — 이동 / 상태 / 세그먼트 / 시각 동기 4분할 리팩토링
 - 경로·스폰·강화 수치의 **ScriptableObject 데이터화** — 스테이지 추가가 코드 수정 없이 가능하도록
-- 사격 판정 로직을 "상시 발사" / "가시 대상 한정" 두 모드로 토글 가능하게 개선
