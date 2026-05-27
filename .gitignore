@@ -74,5 +74,7 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
-# 지원서·AI 활용 과제 등 (공개 레포 제외)
-/docs/AI_과제_Logic_Architecture.md
+# 지원서·면접·AI 활용 과제 (공개 레포 제외)
+/docs/
+INTERVIEW_PREP.md
+INTERVIEW_PREP.html
