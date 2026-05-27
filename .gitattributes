@@ -1,2 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# GitHub language bar: exclude vendor shaders (TMP etc.) so C# shows as primary
+*.shader linguist-vendored
+*.shadergraph linguist-vendored
+*.cginc linguist-vendored
+*.hlsl linguist-vendored
+*.compute linguist-vendored
