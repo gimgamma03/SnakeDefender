@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -36,8 +37,31 @@ namespace SnakeDefender
         private int killedCount;
         private bool finished;
 
+        /// <summary>몸통 파괴 진행(파괴율 UI 등) 갱신 시.</summary>
+        public event Action OnBodyDestructionProgressChanged;
+
         /// <summary>시작 버튼 누른 뒤 true. pauseAtStart가 꺼져 있으면 Awake에서 곧바로 true.</summary>
         public bool HasGameplayBegun { get; private set; }
+
+        /// <summary>이번 스테이지에서 파괴한 몸통 수.</summary>
+        public int DestroyedBodyCount => killedCount;
+
+        /// <summary>이번 스테이지 몸통 목표 수(EnemySpawner·프리팹과 동기).</summary>
+        public int TotalBodyCount => totalEnemyCount;
+
+        /// <summary>0~100. 몸통 파괴 진행률.</summary>
+        public int DestructionRatePercent
+        {
+            get
+            {
+                if (totalEnemyCount <= 0)
+                {
+                    return 0;
+                }
+
+                return Mathf.Clamp(Mathf.RoundToInt(killedCount * 100f / totalEnemyCount), 0, 100);
+            }
+        }
 
         private void Awake()
         {
@@ -116,6 +140,7 @@ namespace SnakeDefender
             }
 
             killedCount += Mathf.Max(1, score);
+            OnBodyDestructionProgressChanged?.Invoke();
 
             if (killedCount >= totalEnemyCount)
             {
