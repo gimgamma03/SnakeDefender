@@ -7,6 +7,7 @@ namespace SnakeDefender
     public class DamageFloatText : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI text;
+        [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private float riseSpeed = 120f;
         [SerializeField] private float lifetime = 0.7f;
 
@@ -15,6 +16,10 @@ namespace SnakeDefender
         private void Awake()
         {
             rectTransform = GetComponent<RectTransform>();
+            if (canvasGroup == null)
+            {
+                canvasGroup = GetComponent<CanvasGroup>();
+            }
         }
 
         public void Play(float damage, Color color)
@@ -23,6 +28,10 @@ namespace SnakeDefender
             {
                 text.text = Mathf.CeilToInt(damage).ToString();
                 text.color = color;
+            }
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
             }
 
             StopAllCoroutines();
@@ -39,17 +48,28 @@ namespace SnakeDefender
             {
                 t += Time.deltaTime;
                 rectTransform.anchoredPosition = start + new Vector2(0f, riseSpeed * t);
-                if (text != null)
+                float alpha = 1f - (t / lifetime);
+                if (canvasGroup != null)
                 {
-                    c.a = 1f - (t / lifetime);
+                    canvasGroup.alpha = alpha;
+                }
+                else if (text != null)
+                {
+                    c.a = alpha;
                     text.color = c;
                 }
 
                 yield return null;
             }
 
+            PooledObject pooled = GetComponent<PooledObject>();
+            if (pooled != null)
+            {
+                pooled.ReturnToPool();
+                yield break;
+            }
+
             gameObject.SetActive(false);
-            WorldSegmentUIManager.Instance?.ReturnDamagePopup(this);
         }
     }
 }

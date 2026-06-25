@@ -24,14 +24,13 @@ namespace SnakeDefender
         [Tooltip("몸통 위 HP 표시용 프리팹(TextMeshPro 등).")]
         [FormerlySerializedAs("hpBarPrefab")]
         [SerializeField] private GameObject hpTextPrefab;
-        [Tooltip("피해 시 표시할 데미지 숫자 프리팹. HP와 동일 구조로 재사용 가능.")]
-        [SerializeField] private GameObject damageTextPrefab;
+        [SerializeField] private GameObjectPoolManager poolManager;
+        [SerializeField] private PoolId damagePopupPoolId = PoolId.DamagePopup;
 
         [Header("데미지 색")]
         [SerializeField] private Color damageColor = Color.white;
 
         private readonly List<Entry> entries = new List<Entry>();
-        private readonly Stack<DamageFloatText> damagePool = new Stack<DamageFloatText>();
         private Camera cachedUiCamera;
 
         // 몸통 HP랑 데미지 숫자 붙일 부모. worldHudRoot 비었으면 canvasRect 씀.
@@ -48,9 +47,9 @@ namespace SnakeDefender
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            if (rootCanvas == null || canvasRect == null || hpTextPrefab == null || damageTextPrefab == null)
+            if (rootCanvas == null || canvasRect == null || hpTextPrefab == null)
             {
-                Debug.LogWarning("[WorldSegmentUIManager] Missing required references (Canvas/Rect/HP Text/Damage Text).", this);
+                Debug.LogWarning("[WorldSegmentUIManager] Missing required references (Canvas/Rect/HP Text).", this);
             }
 
             if (worldHudRoot != null && canvasRect != null && worldHudRoot != canvasRect && !worldHudRoot.IsChildOf(canvasRect))
@@ -81,6 +80,10 @@ namespace SnakeDefender
             }
 
             CacheUiCamera();
+            if (poolManager == null)
+            {
+                poolManager = GameObjectPoolManager.Instance;
+            }
         }
 
         private void OnDestroy()
@@ -211,14 +214,21 @@ namespace SnakeDefender
         public void NotifyDamage(SnakeEnemySegment segment, float amount, Vector3 worldPosition)
         {
             RectTransform layout = LayoutRect;
-            if (damageTextPrefab == null || layout == null)
+            if (layout == null || poolManager == null)
             {
                 return;
             }
 
-            DamageFloatText popup = GetDamagePopup();
+            GameObject popupObject = poolManager.Spawn(damagePopupPoolId, layout);
+            if (popupObject == null)
+            {
+                return;
+            }
+
+            DamageFloatText popup = popupObject.GetComponent<DamageFloatText>();
             if (popup == null)
             {
+                poolManager.Return(popupObject);
                 return;
             }
 
@@ -243,43 +253,6 @@ namespace SnakeDefender
 
             popup.gameObject.SetActive(true);
             popup.Play(amount, damageColor);
-        }
-
-        private DamageFloatText GetDamagePopup()
-        {
-            if (damagePool.Count > 0)
-            {
-                return damagePool.Pop();
-            }
-
-            RectTransform layout = LayoutRect;
-            if (damageTextPrefab == null || layout == null)
-            {
-                return null;
-            }
-
-            GameObject go = Instantiate(damageTextPrefab, layout);
-            return go.GetComponent<DamageFloatText>();
-        }
-
-        public void ReturnDamagePopup(DamageFloatText popup)
-        {
-            if (popup == null)
-            {
-                return;
-            }
-
-            RectTransform layout = LayoutRect;
-            if (layout != null)
-            {
-                popup.transform.SetParent(layout, false);
-            }
-            else
-            {
-                popup.transform.SetParent(transform, false);
-            }
-
-            damagePool.Push(popup);
         }
 
         private void CacheUiCamera()
