@@ -21,6 +21,7 @@
 
 # Unity Profiler deep profile captures (often 1GB+)
 /[Pp]rofiler[Cc]aptures/
+/[Pp]rofile[Aa]nalyzer/
 *.cpuprofile
 
 # Uncomment this line if you wish to ignore the asset store tools plugin

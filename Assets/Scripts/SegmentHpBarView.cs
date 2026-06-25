@@ -12,6 +12,8 @@ namespace SnakeDefender
         [Tooltip("1000 이상이면 축약(예: 5.5K), 아니면 정수 표기.")]
         [SerializeField] private bool compactThousands = true;
 
+        private string lastDisplayedText;
+
         public void SetHp(float current)
         {
             if (label == null)
@@ -19,7 +21,17 @@ namespace SnakeDefender
                 return;
             }
 
-            label.text = compactThousands ? FormatHpCompact(current) : Mathf.CeilToInt(Mathf.Max(0f, current)).ToString();
+            string text = compactThousands
+                ? FormatHpCompact(current)
+                : Mathf.CeilToInt(Mathf.Max(0f, current)).ToString();
+
+            if (text == lastDisplayedText)
+            {
+                return;
+            }
+
+            lastDisplayedText = text;
+            label.text = text;
         }
 
         public static string FormatHpCompact(float value)

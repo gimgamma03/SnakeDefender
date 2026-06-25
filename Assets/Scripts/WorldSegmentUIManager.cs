@@ -42,6 +42,7 @@ namespace SnakeDefender
             public SnakeEnemySegment Segment;
             public RectTransform Root;
             public SegmentHpBarView View;
+            public float LastDisplayedHp = float.NaN;
         }
 
 #if UNITY_EDITOR
@@ -141,7 +142,12 @@ namespace SnakeDefender
 
                 if (e.View != null)
                 {
-                    e.View.SetHp(e.Segment.CurrentHp);
+                    float hp = e.Segment.CurrentHp;
+                    if (!Mathf.Approximately(hp, e.LastDisplayedHp))
+                    {
+                        e.View.SetHp(hp);
+                        e.LastDisplayedHp = hp;
+                    }
                 }
             }
         }
@@ -171,10 +177,13 @@ namespace SnakeDefender
                 View = view
             });
 
+            float hp = segment.CurrentHp;
             if (view != null)
             {
-                view.SetHp(segment.CurrentHp);
+                view.SetHp(hp);
             }
+
+            entries[entries.Count - 1].LastDisplayedHp = hp;
         }
 
         public void Unregister(SnakeEnemySegment segment)
