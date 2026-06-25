@@ -25,6 +25,7 @@ namespace SnakeDefender
         [FormerlySerializedAs("hpBarPrefab")]
         [SerializeField] private GameObject hpTextPrefab;
         [SerializeField] private GameObjectPoolManager poolManager;
+        [SerializeField] private PoolId hpBarPoolId = PoolId.EnemyHp;
         [SerializeField] private PoolId damagePopupPoolId = PoolId.DamagePopup;
 
         [Header("데미지 색")]
@@ -47,9 +48,14 @@ namespace SnakeDefender
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            if (rootCanvas == null || canvasRect == null || hpTextPrefab == null)
+            if (rootCanvas == null || canvasRect == null)
             {
-                Debug.LogWarning("[WorldSegmentUIManager] Missing required references (Canvas/Rect/HP Text).", this);
+                Debug.LogWarning("[WorldSegmentUIManager] Missing required references (Canvas/Rect).", this);
+            }
+
+            if (hpTextPrefab == null && poolManager == null)
+            {
+                Debug.LogWarning("[WorldSegmentUIManager] Set hpTextPrefab or assign poolManager + EnemyHp pool.", this);
             }
 
             if (worldHudRoot != null && canvasRect != null && worldHudRoot != canvasRect && !worldHudRoot.IsChildOf(canvasRect))
@@ -103,7 +109,7 @@ namespace SnakeDefender
                 {
                     if (e.Root != null)
                     {
-                        Destroy(e.Root.gameObject);
+                        ReturnOrDestroyUiObject(e.Root.gameObject);
                     }
 
                     entries.RemoveAt(i);
@@ -158,12 +164,17 @@ namespace SnakeDefender
         public void Register(SnakeEnemySegment segment)
         {
             RectTransform layout = LayoutRect;
-            if (segment == null || hpTextPrefab == null || layout == null)
+            if (segment == null || layout == null)
             {
                 return;
             }
 
-            GameObject go = Instantiate(hpTextPrefab, layout);
+            GameObject go = SpawnHpView(layout);
+            if (go == null)
+            {
+                return;
+            }
+
             RectTransform rt = go.transform as RectTransform;
             if (rt != null)
             {
@@ -202,7 +213,7 @@ namespace SnakeDefender
                 {
                     if (entries[i].Root != null)
                     {
-                        Destroy(entries[i].Root.gameObject);
+                        ReturnOrDestroyUiObject(entries[i].Root.gameObject);
                     }
 
                     entries.RemoveAt(i);
@@ -253,6 +264,42 @@ namespace SnakeDefender
 
             popup.gameObject.SetActive(true);
             popup.Play(amount, damageColor);
+        }
+
+        private GameObject SpawnHpView(RectTransform layout)
+        {
+            if (poolManager != null)
+            {
+                GameObject pooled = poolManager.Spawn(hpBarPoolId, layout);
+                if (pooled != null)
+                {
+                    return pooled;
+                }
+            }
+
+            if (hpTextPrefab == null)
+            {
+                return null;
+            }
+
+            return Instantiate(hpTextPrefab, layout);
+        }
+
+        private void ReturnOrDestroyUiObject(GameObject target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            PooledObject pooled = target.GetComponent<PooledObject>();
+            if (poolManager != null && pooled != null && pooled.Owner == poolManager)
+            {
+                pooled.ReturnToPool();
+                return;
+            }
+
+            Destroy(target);
         }
 
         private void CacheUiCamera()

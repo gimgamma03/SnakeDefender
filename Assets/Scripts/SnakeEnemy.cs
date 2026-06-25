@@ -264,10 +264,13 @@ namespace SnakeDefender
                     continue;
                 }
 
-                float dist = Mathf.Max(0f, headDistance - GetDistanceBehindHead(i));
+                float dist = Mathf.Max(0f, headDistance - activationDistance);
                 Vector3 newPos = GetTrackPoint(dist);
                 segment.transform.position = newPos;
-                segment.transform.rotation = Quaternion.identity;
+                if (segment.transform.rotation != Quaternion.identity)
+                {
+                    segment.transform.rotation = Quaternion.identity;
+                }
 
                 int segmentBaseSortingOrder = -i * Mathf.Max(1, segmentSortingStride);
                 SegmentCache cache = i < segmentCaches.Count ? segmentCaches[i] : null;

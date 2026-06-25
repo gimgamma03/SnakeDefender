@@ -42,6 +42,11 @@ namespace SnakeDefender
             {
                 pool.Release(this);
             }
+            else if (TryGetComponent(out PooledObject pooled))
+            {
+                ClearForPool();
+                pooled.ReturnToPool();
+            }
             else
             {
                 Destroy(gameObject);

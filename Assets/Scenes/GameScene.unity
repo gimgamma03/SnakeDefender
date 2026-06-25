@@ -745,9 +745,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7c3e91b2d584f04a8e6f1c2b9d0e3a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.ProjectilePool
-  prefab: {fileID: 3353139238253136125, guid: 154e0c28a4a8d8c42b24eb948089909a, type: 3}
-  prewarmCount: 24
-  allowExpand: 1
+  poolManager: {fileID: 0}
+  projectilePoolId: 2
+  spawnParentOverride: {fileID: 0}
 --- !u!1 &329871210
 GameObject:
   m_ObjectHideFlags: 0
@@ -860,7 +860,9 @@ MonoBehaviour:
   worldCamera: {fileID: 519420031}
   worldOffset: {x: 0.06, y: 0.35, z: 0}
   hpTextPrefab: {fileID: 2743443285027253168, guid: 8e2b5014f2f5b4147989e3ddfff314b8, type: 3}
-  damageTextPrefab: {fileID: 2743443285027253168, guid: 7e20323da44525444891a738f16e8204, type: 3}
+  poolManager: {fileID: 481815281}
+  hpBarPoolId: 1
+  damagePopupPoolId: 0
   damageColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &369505994
 GameObject:
@@ -1316,6 +1318,66 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 431437600}
   m_CullTransparentMesh: 1
+--- !u!1 &481815279
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 481815280}
+  - component: {fileID: 481815281}
+  m_Layer: 0
+  m_Name: ObjectPoolManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &481815280
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 481815279}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 546.1861, y: 873.8423, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &481815281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 481815279}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c74af62ed5e4f443aa52b2a9aafdb84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SnakeDefender.GameObjectPoolManager
+  poolConfigs:
+  - id: 0
+    prefab: {fileID: 2743443285027253168, guid: 7e20323da44525444891a738f16e8204, type: 3}
+    initialSize: 10
+    canExpand: 1
+    defaultParent: {fileID: 2847105502}
+  - id: 1
+    prefab: {fileID: 2743443285027253168, guid: 8e2b5014f2f5b4147989e3ddfff314b8, type: 3}
+    initialSize: 10
+    canExpand: 0
+    defaultParent: {fileID: 2847105502}
+  - id: 2
+    prefab: {fileID: 313914662604017948, guid: 154e0c28a4a8d8c42b24eb948089909a, type: 3}
+    initialSize: 24
+    canExpand: 1
+    defaultParent: {fileID: 303777978}
 --- !u!1001 &518601980
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4600,3 +4662,4 @@ SceneRoots:
   - {fileID: 357459398}
   - {fileID: 303777978}
   - {fileID: 136249730}
+  - {fileID: 481815280}

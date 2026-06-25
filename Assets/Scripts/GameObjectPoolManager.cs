@@ -5,7 +5,9 @@ namespace SnakeDefender
 {
     public enum PoolId
     {
-        DamagePopup = 0
+        DamagePopup = 0,
+        EnemyHp = 1,
+        Projectile = 2
     }
 
     [DefaultExecutionOrder(-200)]

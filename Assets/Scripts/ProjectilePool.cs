@@ -1,65 +1,45 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace SnakeDefender
 {
-    // VerticalProjectile 한 종류만 담는 로컬 풀임. 태그 싱글톤 없고 프리팹만 인스펙터에 넣으면 됨. 타워에서 Get 하고 총알은 Initialize 부르면 됨.
+    // ObjectPool_Projectile 오브젝트에 붙여두고, 내부적으로 GameObjectPoolManager의 Projectile 풀을 사용.
     public class ProjectilePool : MonoBehaviour
     {
-        [SerializeField] private VerticalProjectile prefab;
-        [SerializeField] private int prewarmCount = 24;
-        [SerializeField] private bool allowExpand = true;
+        [SerializeField] private GameObjectPoolManager poolManager;
+        [SerializeField] private PoolId projectilePoolId = PoolId.Projectile;
+        [SerializeField] private Transform spawnParentOverride;
 
-        private readonly Queue<VerticalProjectile> available = new Queue<VerticalProjectile>();
-        private Transform poolRoot;
-
-        private void Awake()
+        private void OnEnable()
         {
-            poolRoot = new GameObject("PooledProjectiles").transform;
-            poolRoot.SetParent(transform, false);
-
-            if (prefab == null)
+            if (poolManager == null)
             {
-                return;
-            }
-
-            for (int i = 0; i < prewarmCount; i++)
-            {
-                VerticalProjectile p = CreatePooledInstance();
-                p.gameObject.SetActive(false);
-                available.Enqueue(p);
+                poolManager = GameObjectPoolManager.Instance;
             }
         }
 
-        private VerticalProjectile CreatePooledInstance()
-        {
-            VerticalProjectile p = Instantiate(prefab, poolRoot);
-            p.BindPool(this);
-            return p;
-        }
-
-        // 꺼낸 다음에 바깥에서 Initialize 호출해야 함.
+        // 꺼낸 다음에 바깥에서 Initialize 호출.
         public VerticalProjectile Get(Vector3 position, Quaternion rotation)
         {
-            if (prefab == null)
+            if (poolManager == null)
             {
                 return null;
             }
 
-            VerticalProjectile p;
-            if (available.Count > 0)
-            {
-                p = available.Dequeue();
-            }
-            else if (allowExpand)
-            {
-                p = CreatePooledInstance();
-            }
-            else
+            Transform parent = spawnParentOverride != null ? spawnParentOverride : transform;
+            GameObject pooledObject = poolManager.Spawn(projectilePoolId, parent);
+            if (pooledObject == null)
             {
                 return null;
             }
 
+            VerticalProjectile p = pooledObject.GetComponent<VerticalProjectile>();
+            if (p == null)
+            {
+                poolManager.Return(pooledObject);
+                return null;
+            }
+
+            p.BindPool(this);
             p.transform.SetPositionAndRotation(position, rotation);
             p.gameObject.SetActive(true);
             return p;
@@ -73,9 +53,13 @@ namespace SnakeDefender
             }
 
             projectile.ClearForPool();
-            projectile.transform.SetParent(poolRoot, false);
-            projectile.gameObject.SetActive(false);
-            available.Enqueue(projectile);
+            if (poolManager == null)
+            {
+                Destroy(projectile.gameObject);
+                return;
+            }
+
+            poolManager.Return(projectile.gameObject);
         }
     }
 }

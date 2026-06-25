@@ -12,7 +12,10 @@ namespace SnakeDefender
         [SerializeField] private bool autoAssignDiscSortingOrder = true;
 
         private Transform[] discs;
+        private SpriteRenderer[][] discRenderers;
+        private int[] lastDiscSortingOrders;
         private bool built;
+        private int lastSegmentBaseSortingOrder = int.MinValue;
 
         public void Refresh(PathRoute pathRoute, float anchorDistanceAlongPath, Transform finalGoalTarget = null, float routeLength = 0f, int segmentBaseSortingOrder = 0)
         {
@@ -38,9 +41,11 @@ namespace SnakeDefender
                 discs[k].SetPositionAndRotation(pos, Quaternion.identity);
                 if (autoAssignDiscSortingOrder)
                 {
-                    ApplyDiscSortingOrder(discs[k].gameObject, k, segmentBaseSortingOrder);
+                    ApplyDiscSortingOrder(k, segmentBaseSortingOrder);
                 }
             }
+
+            lastSegmentBaseSortingOrder = segmentBaseSortingOrder;
         }
 
         private void EnsureDiscs(PathRoute pathRoute)
@@ -62,6 +67,8 @@ namespace SnakeDefender
             }
 
             discs = new Transform[discCount];
+            discRenderers = new SpriteRenderer[discCount][];
+            lastDiscSortingOrders = new int[discCount];
             for (int i = 0; i < discCount; i++)
             {
                 GameObject go = Instantiate(discPrefab, transform);
@@ -74,18 +81,45 @@ namespace SnakeDefender
                 }
 
                 discs[i] = go.transform;
+                discRenderers[i] = go.GetComponentsInChildren<SpriteRenderer>(true);
+                lastDiscSortingOrders[i] = int.MinValue;
             }
 
             built = true;
+            lastSegmentBaseSortingOrder = int.MinValue;
         }
 
-        private void ApplyDiscSortingOrder(GameObject discObject, int discIndex, int segmentBaseSortingOrder)
+        private void ApplyDiscSortingOrder(int discIndex, int segmentBaseSortingOrder)
         {
-            SpriteRenderer[] renderers = discObject.GetComponentsInChildren<SpriteRenderer>(true);
+            if (discRenderers == null || discIndex < 0 || discIndex >= discRenderers.Length)
+            {
+                return;
+            }
+
+            int sortingOrder = segmentBaseSortingOrder + (discIndex * discOrderStep);
+            if (lastSegmentBaseSortingOrder == segmentBaseSortingOrder &&
+                lastDiscSortingOrders != null &&
+                discIndex < lastDiscSortingOrders.Length &&
+                lastDiscSortingOrders[discIndex] == sortingOrder)
+            {
+                return;
+            }
+
+            SpriteRenderer[] renderers = discRenderers[discIndex];
+            if (renderers == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < renderers.Length; i++)
             {
                 // 디스크 하나 안에서는 정렬 순서 같게 맞추는 거임.
-                renderers[i].sortingOrder = segmentBaseSortingOrder + (discIndex * discOrderStep);
+                renderers[i].sortingOrder = sortingOrder;
+            }
+
+            if (lastDiscSortingOrders != null && discIndex < lastDiscSortingOrders.Length)
+            {
+                lastDiscSortingOrders[discIndex] = sortingOrder;
             }
         }
 
